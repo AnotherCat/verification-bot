@@ -1,0 +1,16 @@
+{
+    "reviewChannel": "996012139649175622",
+    "followupChannel": "996012116542771240",
+    "raiseChannel": "996012162587832380",
+    "approveLogChannel": "843084550574047243",
+    "raiseRole": "996168482062348388",
+    "reviewerRole": "996168407072387112",
+    "followUpPingRoles": [],
+    "addRole": "996168269260140575",
+    "removeRole": "996168171423809666",
+    "successMessage": {
+        "channelId": "843081989762580510",
+        "message": "welcome {user}"
+    },
+    "privateThreads": false
+}
