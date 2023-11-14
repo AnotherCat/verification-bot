@@ -1,4 +1,4 @@
-import { ButtonInteraction, MessageActionRow, MessageButton, Modal, ModalActionRowComponent, TextInputComponent } from "discord.js";
+import { ButtonInteraction, ActionRowBuilder, ModalBuilder, TextInputBuilder, ModalActionRowComponentBuilder, TextInputStyle } from "discord.js";
 import { prisma } from "..";
 import { MessageError } from "../errors";
 import { Button } from "../types";
@@ -24,41 +24,41 @@ const button: Button = {
 
 
 
-        const modal = new Modal()
+        const modal = new ModalBuilder()
             .setCustomId("submit-application")
             .setTitle("Submit Application")
 
-        const pronounInput = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+        const pronounInput = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
             .setCustomId("pronouns")
             .setLabel("Pronouns")
             .setMaxLength(100)
             .setRequired(true)
             .setPlaceholder("they/them")
-            .setStyle("SHORT"))
+            .setStyle(TextInputStyle.Short))
 
-        const ageInput = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+        const ageInput = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
             .setCustomId("age")
             .setLabel("Age")
             .setMaxLength(3)
             .setRequired(true)
             .setPlaceholder("Exact age is required - eg 17")
-            .setStyle("SHORT"))
+            .setStyle(TextInputStyle.Short))
 
-        const queerIdentity = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+        const queerIdentity = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
             .setCustomId("identity")
             .setLabel("Queer Identity(s)")
             .setMaxLength(500)
             .setRequired(true)
             .setPlaceholder("Your queer identities, if any, here")
-            .setStyle("SHORT"))
+            .setStyle(TextInputStyle.Short))
 
-        const joiningReason = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+        const joiningReason = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
             .setCustomId("reason")
             .setLabel("Joining Reason")
             .setMaxLength(500)
             .setRequired(true)
             .setPlaceholder("Why did you decide to join this server?")
-            .setStyle("PARAGRAPH"))
+            .setStyle(TextInputStyle.Paragraph))
 
         modal.addComponents(
             ageInput,

@@ -1,17 +1,19 @@
 
 import {
-    MessageActionRow,
-    MessageActionRowComponent,
-    MessageButton,
-    MessageEmbed,
-    MessageOptions,
-    MessagePayload,
+    ActionRowBuilder,
+    ActionRowComponent,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelType,
+    ComponentType,
+    EmbedBuilder,
     ModalSubmitInteraction,
+    PermissionFlagsBits,
     TextChannel,
-    ThreadChannel,
+    ThreadAutoArchiveDuration,
 } from "discord.js";
 import { prisma } from "..";
-import { embedBlue, embedGreen, embedRed } from "../const";
+import { embedRed } from "../const";
 import { MessageError } from "../errors";
 import {
 
@@ -69,7 +71,7 @@ const modal: Modal = {
             ;
         const raiseChannel = await interaction.guild.channels.fetch(raiseChannelId);
 
-        if (raiseChannel.type !== "GUILD_TEXT") {
+        if (raiseChannel.type !== ChannelType.GuildText) {
             throw new MessageError("Raise channel is not a text channel.");
         }
 
@@ -77,26 +79,26 @@ const modal: Modal = {
 
 
         const components =
-            [new MessageButton()
+            [new ButtonBuilder()
                 .setLabel("Override & Approve")
                 .setCustomId(`raise-approve:${applicationReference}`)
-                .setStyle("SUCCESS"),
+                .setStyle(ButtonStyle.Success),
 
 
             // If past applications exist, show a button to view them
             ...(pastApplications.length > 0 ? [
-                new MessageButton()
+                new ButtonBuilder()
                     .setLabel("View Previous")
                     .setCustomId(`view-past:${applicationReference}`)
-                    .setStyle("PRIMARY"),
+                    .setStyle(ButtonStyle.Primary),
             ] : []),]
 
         let followUpMention = ""
         if (!application.followUpChannelId) {
-            components.push(new MessageButton()
+            components.push(new ButtonBuilder()
                 .setLabel("Open Follow-up")
                 .setCustomId(`raise-followup:${applicationReference}`)
-                .setStyle("PRIMARY"))
+                .setStyle(ButtonStyle.Primary))
         } else {
             followUpMention = `\n\nA followup has been opened in: <#${application.followUpChannelId}>`
         }
@@ -104,7 +106,7 @@ const modal: Modal = {
 
 
         const raiseReport = await raiseChannel.send({
-            embeds: [new MessageEmbed({
+            embeds: [new EmbedBuilder({
                 title: `Reviewing ${member.user.username}'s application - raised by ${interaction.member.user.username}`,
                 description: `Original Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
                     `\n\n**Age**: ${applicationData.age}`
@@ -116,18 +118,19 @@ const modal: Modal = {
                 color: embedRed
             })],
             components: [
-                new MessageActionRow().setComponents(
+                new ActionRowBuilder<ButtonBuilder>().setComponents(
                     components
                 )
             ]
         })
 
+        //// TODO: check: private?
         // If the bot has the correct permissions create a public thread on that message
-        const permissionsInRaiseChannel = interaction.guild.me.permissionsIn(raiseReport.channel as TextChannel)
-        if (!(permissionsInRaiseChannel.has("CREATE_PUBLIC_THREADS") && permissionsInRaiseChannel.has("SEND_MESSAGES_IN_THREADS"))) {
+        const permissionsInRaiseChannel = interaction.guild.members.me.permissionsIn(raiseReport.channel as TextChannel)
+        if (!(permissionsInRaiseChannel.has(PermissionFlagsBits.CreatePublicThreads) && permissionsInRaiseChannel.has(PermissionFlagsBits.SendMessagesInThreads))) {
             throw new MessageError("The bot does not have the correct permissions to create a public thread in the raise channel.");
         }
-        const thread = await raiseReport.startThread({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: "MAX" });
+        const thread = await raiseReport.startThread({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek });
         // send message pinging
         await thread.send({ content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${raiseRole}>` })
 
@@ -149,23 +152,32 @@ const modal: Modal = {
         // Update the message to show it's been raised
 
         // Add a note to the end of the embeds description and disable all buttons
-        const embed = interaction.message.embeds[0];
-        embed.description = `${embed.description}\n\nApplication has been raised. See the report in <#${thread.id}> for more info`;
-        embed.color = embedRed
+        const embed = EmbedBuilder.from(interaction.message.embeds[0])
+        embed.setDescription(`${embed.data.description}\n\nApplication has been raised. See the report in <#${thread.id}> for more info`)
+        embed.setColor(embedRed)
+
 
         const interactionComponents = interaction.message.components[0]
-            .components as MessageActionRowComponent[];
+            .components as ActionRowComponent[]
+        const newInteractionComponents = new ActionRowBuilder<ButtonBuilder>()
         interactionComponents.forEach((component) => {
             if (
-                component.type === "BUTTON"
-            ) {
-                component.disabled = true;
-            }
-        });
+                component.type === ComponentType.Button) {
+                if (
+                    component.customId.includes("followup")) {
 
+
+                    const newComponent = ButtonBuilder.from(component);
+                    newComponent.setDisabled(true);
+                    newInteractionComponents.addComponents(newComponent);
+                }
+                else { newInteractionComponents.addComponents(ButtonBuilder.from(component)); }
+            }
+        }
+        );
         await interaction.editReply({
             embeds: [embed],
-            components: [new MessageActionRow().addComponents(interactionComponents)],
+            components: [newInteractionComponents],
         });
 
 

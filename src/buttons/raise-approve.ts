@@ -1,9 +1,8 @@
-import { ButtonInteraction, GuildMemberRoleManager, MessageEmbed } from "discord.js";
-import { prisma } from "..";
-import { embedGreen } from "../const";
+import { ButtonInteraction, GuildMemberRoleManager, } from "discord.js";
+
 import { MessageError } from "../errors";
 import { Button } from "../types";
-import { addRole, removeRole, successMessage, followupChannel, raiseRole, raiseChannel } from "../settings.json"
+import { raiseRole, } from "../settings.json"
 import approveLogic from "./shared-approve";
 
 

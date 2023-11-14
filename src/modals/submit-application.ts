@@ -1,5 +1,5 @@
 import { Prisma, VerificationSubmission } from "@prisma/client";
-import { ButtonInteraction, MessageActionRow, MessageButton, MessageEmbed, ModalSubmitInteraction } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
 import { prisma } from "..";
 import { embedBlue, embedGreen } from "../const";
 import { MessageError } from "../errors";
@@ -43,12 +43,12 @@ const modal: Modal = {
 
         // send application to review channel
         const reviewChannel = interaction.guild.channels.cache.get(reviewChannelId)
-        if (!reviewChannel || !reviewChannel.isText()) {
+        if (!reviewChannel || !reviewChannel.isTextBased()) {
             throw new Error("Could not find the review channel! This is not an expected error, please contact a server mod.")
         }
         const reviewMessage = await reviewChannel.send({
             embeds: [
-                new MessageEmbed({
+                new EmbedBuilder({
                     title: `Reviewing ${interaction.member.user.username}'s application`,
                     description: `Application submitted by: <@${interaction.member.user.id}> \`${interaction.member.user.username}#${interaction.member.user.discriminator}\` (\`${interaction.member.user.id}\`)` +
                         `\n\n**Age**: ${application.age}`
@@ -59,25 +59,25 @@ const modal: Modal = {
                 })
             ],
             components: [
-                new MessageActionRow().setComponents(
-                    new MessageButton()
+                new ActionRowBuilder<ButtonBuilder>().setComponents(
+                    new ButtonBuilder()
                         .setLabel("Approve")
                         .setCustomId(`approve:${applicationReference}`)
-                        .setStyle("SUCCESS"),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
                         .setLabel("Open Follow-up")
                         .setCustomId(`followup:${applicationReference}`)
-                        .setStyle("PRIMARY"),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
                         .setLabel("Raise")
                         .setCustomId(`raise:${applicationReference}`)
-                        .setStyle("DANGER"),
+                        .setStyle(ButtonStyle.Danger),
                     // If past applications exist, show a button to view them
                     ...(pastApplications.length > 0 ? [
-                        new MessageButton()
+                        new ButtonBuilder()
                             .setLabel("View Previous")
                             .setCustomId(`view-past:${applicationReference}`)
-                            .setStyle("PRIMARY"),
+                            .setStyle(ButtonStyle.Primary),
                     ] : []),
                 )
             ]
@@ -112,7 +112,7 @@ const modal: Modal = {
         // Send success message
         await interaction.editReply({
             embeds: [
-                new MessageEmbed({
+                new EmbedBuilder({
                     title: "Application Submitted",
                     description: `Application successfully! Your application will now be manually reviewed.`
                     , color: embedGreen

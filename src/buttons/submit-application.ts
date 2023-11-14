@@ -1,4 +1,4 @@
-import { ButtonInteraction, MessageActionRow, MessageButton, MessageEmbed } from "discord.js";
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } from "discord.js";
 import { prisma } from "..";
 import { embedBlue } from "../const";
 import { MessageError } from "../errors";
@@ -21,12 +21,13 @@ const button: Button = {
 		// Reply with a confirmation message for the rules
 
 		await interaction.reply({
-			embeds: [new MessageEmbed({ description: 'Please review the #rules and agree to them before continuing.', color: embedBlue })], components: [new MessageActionRow().setComponents(
+			embeds: [new EmbedBuilder({ description: 'Please review the #rules and agree to them before continuing.', color: embedBlue })],
+			components: [new ActionRowBuilder<ButtonBuilder>().setComponents(
 				[
-					new MessageButton()
+					new ButtonBuilder()
 						.setCustomId("submit-application-confirm")
 						.setLabel("Agree")
-						.setStyle("SUCCESS")
+						.setStyle(ButtonStyle.Success)
 				]
 			)
 			],

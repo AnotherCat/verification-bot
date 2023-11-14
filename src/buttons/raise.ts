@@ -1,9 +1,7 @@
-import { ButtonInteraction, MessageActionRow, MessageEmbed, Modal, ModalActionRowComponent, TextInputComponent } from "discord.js";
+import { ButtonInteraction, ActionRowBuilder, ModalBuilder, ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { prisma } from "..";
-import { embedGreen } from "../const";
 import { MessageError } from "../errors";
 import { Button } from "../types";
-import { addRole, removeRole, successMessage, followupChannel } from "../settings.json"
 
 
 const button: Button = {
@@ -28,16 +26,16 @@ const button: Button = {
 
         const userId = application.userId.toString()
 
-        const modal = new Modal()
+        const modal = new ModalBuilder()
             .setCustomId(interaction.customId)
             .setTitle("Raise application to moderators")
 
-        const messageInput = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+        const messageInput = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
             .setCustomId("reason")
             .setLabel("Reason for raising the application")
             .setMaxLength(1000)
             .setRequired(true)
-            .setStyle("PARAGRAPH"))
+            .setStyle(TextInputStyle.Paragraph))
 
         modal.addComponents(
 

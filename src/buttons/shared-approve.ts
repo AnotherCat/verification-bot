@@ -1,4 +1,4 @@
-import { ButtonInteraction, MessageActionRow, MessageButton, MessageEmbed, TextChannel, ThreadChannel } from "discord.js"
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ThreadChannel, PermissionFlagsBits, ChannelType, ButtonStyle, ComponentType } from "discord.js"
 import { prisma } from ".."
 import { embedGreen } from "../const"
 import { MessageError } from "../errors"
@@ -35,14 +35,15 @@ const approveLogic = async ({
     const member = await interaction.guild.members.fetch(userId)
 
     const logChannel = await interaction.guild.channels.fetch(approveLogChannel)
-    if (!logChannel || !logChannel.isText()) {
+    if (!logChannel || !logChannel.isTextBased() || logChannel.isDMBased()) {
         throw new MessageError("Approve log channel is not a text channel.")
     }
-    if (!logChannel.permissionsFor(interaction.guild.me).has("SEND_MESSAGES") || !logChannel.permissionsFor(interaction.guild.me).has("VIEW_CHANNEL")) {
+    // TODO: Better to ask for forgiveness?
+    if (!logChannel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.SendMessages) || !logChannel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ViewChannel)) {
         throw new MessageError("I do not have the required permissions to send messages to the approve log channel.")
     }
 
-    const logEmbed = new MessageEmbed({
+    const logEmbed = new EmbedBuilder({
         title: `Application by ${member.user.username} approved`,
         description: `Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
             `\n\n**Age**: ${applicationData.age}`
@@ -51,7 +52,7 @@ const approveLogic = async ({
             + `\n**Reason**: ${applicationData.reason}`,
         color: embedGreen
     })
-    const logActionRow = new MessageActionRow()
+    const logActionRow = new ActionRowBuilder<ButtonBuilder>()
 
 
 
@@ -64,7 +65,7 @@ const approveLogic = async ({
     }
     // Update the user's roles
     // first check if the bot has the permissions to do so, and has the right role permissions 
-    if (!interaction.guild.me.permissions.has("MANAGE_ROLES") || interaction.guild.me.roles.highest.comparePositionTo(addRole) <= 0 || interaction.guild.me.roles.highest.comparePositionTo(removeRole) <= 0 || !member.manageable) {
+    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles) || interaction.guild.members.me.roles.highest.comparePositionTo(addRole) <= 0 || interaction.guild.members.me.roles.highest.comparePositionTo(removeRole) <= 0 || !member.manageable) {
         throw new MessageError("I do not have the required permissions to add or remove the roles for that user.")
     }
     await (member).roles.add(addRole)
@@ -86,20 +87,21 @@ const approveLogic = async ({
     // get channel
     const channel = await interaction.guild.channels.fetch(successMessage.channelId)
     // send message
-    if (channel && channel.permissionsFor(interaction.guild.me).has("SEND_MESSAGES") && channel.isText()) {
+    if (channel && channel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.SendMessages) && channel.isTextBased()) {
         await channel.send(successMessage.message.replace("{user}", `<@${userId}>`))
     }
 
 
 
+    // TODO check this nonsense 
     let followupThread: ThreadChannel | undefined
     if (application.followUpChannelId) {
         const followUpParentChannel = await interaction.guild.channels.fetch(followUpChannelId)
-        if (followUpParentChannel && followUpParentChannel.type === "GUILD_TEXT") {
+        if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
             const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
             if (thread) {
                 followupThread = thread
-                logActionRow.addComponents(new MessageButton().setStyle("LINK").setURL(`https://discord.com/channels/${interaction.guild.id}/${thread.id}/${thread.lastMessageId}`).setLabel("View followup thread"))
+                logActionRow.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(`https://discord.com/channels/${interaction.guild.id}/${thread.id}/${thread.lastMessageId}`).setLabel("View followup thread"))
             }
         }
     }
@@ -107,11 +109,11 @@ const approveLogic = async ({
     let raiseThread: ThreadChannel | undefined
     if (application.raiseThreadId) {
         const raiseParentChannel = await interaction.guild.channels.fetch(raiseChannel)
-        if (raiseParentChannel && raiseParentChannel.type === "GUILD_TEXT") {
+        if (raiseParentChannel && raiseParentChannel.type === ChannelType.GuildText) {
             const thread = await raiseParentChannel.threads.fetch(application.raiseThreadId.toString(),)
             if (thread) {
                 raiseThread = thread
-                logActionRow.addComponents(new MessageButton().setStyle("LINK").setURL(`https://discord.com/channels/${interaction.guild.id}/${thread.id}/${thread.lastMessageId}`).setLabel("View raise thread"))
+                logActionRow.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(`https://discord.com/channels/${interaction.guild.id}/${thread.id}/${thread.lastMessageId}`).setLabel("View raise thread"))
             }
         }
     }
@@ -130,14 +132,15 @@ const approveLogic = async ({
 
     // Close and lock the followup thread 
     if (followupThread) {
-        await followupThread.send({ content: "The user has been approved - this thread should now be closed", components: [new MessageActionRow().setComponents(new MessageButton().setStyle("LINK").setURL(logMessage.url).setLabel("View log message"))] })
+        await followupThread.send({ content: "The user has been approved - this thread should now be closed", components: [new ActionRowBuilder<ButtonBuilder>().setComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(logMessage.url).setLabel("View log message"))] })
         // Check if bot has MANAGE_THREADS permission
-        if (followupThread && followupThread.permissionsFor(interaction.guild.me).has("MANAGE_THREADS")) {
+        if (followupThread && followupThread.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
+            // TODO checkup on how thread permissions work now 
             await followupThread.edit({
                 locked: true,
                 archived: true,
-
-            }, "Application approved")
+                reason: "Application approved"
+            })
         }
 
     }
@@ -146,13 +149,14 @@ const approveLogic = async ({
 
     // Close and lock the raise thread
     if (raiseThread) {
-        await raiseThread.send({ content: "The user has been approved - this thread should now be closed", components: [new MessageActionRow().setComponents(new MessageButton().setStyle("LINK").setURL(logMessage.url).setLabel("View log message"))] })
+        await raiseThread.send({ content: "The user has been approved - this thread should now be closed", components: [new ActionRowBuilder<ButtonBuilder>().setComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(logMessage.url).setLabel("View log message"))] })
         // Check if bot has MANAGE_THREADS permission
-        if (raiseThread && raiseThread.permissionsFor(interaction.guild.me).has("MANAGE_THREADS")) {
+        if (raiseThread && raiseThread.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
             await raiseThread.edit({
                 locked: true,
                 archived: true,
-            }, "Application approved")
+                reason: "Application approved"
+            })
         }
 
 
@@ -170,7 +174,7 @@ const approveLogic = async ({
 
     // Remove the application message
     const reviewChannel = await interaction.guild.channels.fetch(reviewChannelId)
-    if (reviewChannel.type !== "GUILD_TEXT") {
+    if (reviewChannel.type !== ChannelType.GuildText) {
         throw new MessageError("Review channel is not a text channel.")
     }
     await (await reviewChannel.messages.fetch(application.reviewMessageId.toString())).delete()
@@ -178,11 +182,15 @@ const approveLogic = async ({
     // Update the interaction's message
     interaction.update({
         embeds: [
-            new MessageEmbed(interaction.message.embeds[0]).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
+            new EmbedBuilder(interaction.message.embeds[0]).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
         ],
-        components: [new MessageActionRow().setComponents(interaction.message.components?.map(component => {
-            component.disabled = true
-            return component
+        // TODO: Check if this works as a additional step ([0].components) has been added
+        components: [new ActionRowBuilder<ButtonBuilder>().setComponents(interaction.message.components[0].components?.map(receivedComponent => {
+            if (receivedComponent.type === ComponentType.Button) {
+                const component = ButtonBuilder.from(receivedComponent)
+                component.setDisabled(true)
+                return component
+            }
         }))]
     })
 
@@ -190,7 +198,7 @@ const approveLogic = async ({
 
     interaction.editReply({
 
-        embeds: [new MessageEmbed({ description: 'User approved.', color: embedGreen })]
+        embeds: [new EmbedBuilder({ description: 'User approved.', color: embedGreen })]
     })
 
 

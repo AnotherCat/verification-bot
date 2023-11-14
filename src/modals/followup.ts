@@ -1,18 +1,19 @@
-import { ActionRowBuilder } from "@discordjs/builders";
-import { Prisma, VerificationSubmission } from "@prisma/client";
+
 import {
-    ButtonInteraction,
-    MessageActionRow,
-    MessageActionRowComponent,
-    MessageButton,
-    MessageEmbed,
-    MessageOptions,
-    MessagePayload,
+    ActionRowBuilder,
+    ActionRowComponent,
+    ButtonBuilder,
+    ButtonStyle,
+    ChannelType,
+    ComponentType,
+    BaseMessageOptions,
     ModalSubmitInteraction,
+    PermissionFlagsBits,
+    ThreadAutoArchiveDuration,
     ThreadChannel,
+    EmbedBuilder,
 } from "discord.js";
 import { prisma } from "..";
-import { embedBlue, embedGreen } from "../const";
 import { MessageError } from "../errors";
 import {
     followupChannel as followupChannelId,
@@ -68,24 +69,24 @@ const modal: Modal = {
                 .join("\n")
             : undefined;
 
-        let followupInitialContent: MessageOptions = {
+        let followupInitialContent: BaseMessageOptions = {
             content: `<@${userId}> a follow up has been opened in response to your application, by <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
-        let followupInitialReopenContent: MessageOptions = {
+        let followupInitialReopenContent: BaseMessageOptions = {
             content: `<@${userId}> a follow up has been reopened in response to your most recent application, by <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
-        let followupInitialContentSecondMessage: MessageOptions | undefined =
+        let followupInitialContentSecondMessage: BaseMessageOptions | undefined =
             undefined;
         const applicationMessageJumpLink = `https://discordapp.com/channels/${interaction.guild.id}/${application.reviewMessageChannelId}/${application.reviewMessageId}`;
 
         const components = [
-            new MessageActionRow().addComponents([
-                new MessageButton({
+            new ActionRowBuilder<ButtonBuilder>().addComponents([
+                new ButtonBuilder({
                     label: "View Application",
                     url: applicationMessageJumpLink,
-                    style: "LINK",
+                    style: ButtonStyle.Link,
                 }),
             ]),
         ];
@@ -115,7 +116,7 @@ const modal: Modal = {
             followupChannelId
         );
 
-        if (followupChannel.type !== "GUILD_TEXT") {
+        if (followupChannel.type !== ChannelType.GuildText) {
             throw new MessageError("Followup channel is not a text channel.");
         }
 
@@ -144,7 +145,7 @@ const modal: Modal = {
             if (thread) {
 
                 // first check that the bot can manage threads and can send messages in threads
-                if (!interaction.guild.me.permissionsIn(followupChannel).has("MANAGE_THREADS") || !interaction.guild.me.permissionsIn(followupChannel).has("SEND_MESSAGES_IN_THREADS")) {
+                if (!interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.ManageThreads) || !interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.SendMessagesInThreads)) {
                     throw new MessageError("The bot does not have permissions to manage threads and send messages in them.");
                 }
                 await thread.send(followupInitialReopenContent);
@@ -160,35 +161,28 @@ const modal: Modal = {
             if (privateThreads) {
                 // create a private thread with the user, but first check if the bot has permission, and the guild can have private threads
                 if (
-                    !interaction.guild.me
+                    !interaction.guild.members.me
                         .permissionsIn(followupChannel)
-                        .has("CREATE_PRIVATE_THREADS") ||
-                    !interaction.guild.me
+                        .has(PermissionFlagsBits.CreatePrivateThreads) ||
+                    !interaction.guild.members.me
                         .permissionsIn(followupChannel)
-                        .has("SEND_MESSAGES_IN_THREADS")
+                        .has(PermissionFlagsBits.SendMessagesInThreads)
                 ) {
                     throw new MessageError(
                         "The bot does not have permission to create private threads and send messages in them."
                     );
                 }
-                if (
-                    interaction.guild.premiumTier === "NONE" ||
-                    interaction.guild.premiumTier === "TIER_1"
-                ) {
-                    throw new MessageError(
-                        "The guild does not have the required boost level to create private threads."
-                    );
-                }
+
             } else {
                 // create public thread with the user, but first check if the bot has the permission to do so
 
                 if (
-                    !interaction.guild.me
+                    !interaction.guild.members.me
                         .permissionsIn(followupChannel)
-                        .has("CREATE_PUBLIC_THREADS") ||
-                    !interaction.guild.me
+                        .has(PermissionFlagsBits.CreatePublicThreads) ||
+                    !interaction.guild.members.me
                         .permissionsIn(followupChannel)
-                        .has("SEND_MESSAGES_IN_THREADS")
+                        .has(PermissionFlagsBits.SendMessagesInThreads)
                 ) {
                     throw new MessageError(
                         "The bot does not have permission to create public threads and send messages in them."
@@ -199,10 +193,11 @@ const modal: Modal = {
 
 
             thread = await followupChannel.threads.create({
-                type: privateThreads ? "GUILD_PRIVATE_THREAD" : "GUILD_PUBLIC_THREAD",
+                // TODO: Decide if public threads should be removed as they were in place when private threads were limited
+                type: privateThreads ? ChannelType.PrivateThread : ChannelType.PublicThread,
                 invitable: false,
                 name: `Follow up for ${member.user.username}`,
-                autoArchiveDuration: "MAX"
+                autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek
             });
             await thread.send(followupInitialContent);
             if (followupInitialContentSecondMessage) {
@@ -224,23 +219,34 @@ const modal: Modal = {
         // Update the message to show it's been followed up
 
         // Add a note to the end of the embeds description and disable the followup button
-        const embed = interaction.message.embeds[0];
-        embed.description = `${embed.description}\n\nFollowup has been opened in: <#${thread.id}>`;
+        const embed = EmbedBuilder.from(interaction.message.embeds[0])
+
+        embed.setDescription(`${embed.data.description}\n\nFollowup has been opened in: <#${thread.id}>`)
 
         const interactionComponents = interaction.message.components[0]
-            .components as MessageActionRowComponent[];
+            .components as ActionRowComponent[]
+        const newInteractionComponents = new ActionRowBuilder<ButtonBuilder>()
         interactionComponents.forEach((component) => {
             if (
-                component.type === "BUTTON" &&
-                component.customId.includes("followup")
-            ) {
-                component.disabled = true;
+                component.type === ComponentType.Button) {
+                if (
+                    component.customId.includes("followup")) {
+
+
+                    const newComponent = ButtonBuilder.from(component);
+                    newComponent.setDisabled(true);
+                    newInteractionComponents.addComponents(newComponent);
+                }
+                else { newInteractionComponents.addComponents(ButtonBuilder.from(component)); }
             }
-        });
+        }
+        );
+
+
 
         await interaction.editReply({
             embeds: [embed],
-            components: [new MessageActionRow().addComponents(interactionComponents)],
+            components: [newInteractionComponents],
         });
     },
 };

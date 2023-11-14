@@ -1,9 +1,8 @@
-import { ButtonInteraction, MessageActionRow, MessageButton, MessageEmbed, Modal, ModalActionRowComponent, TextInputComponent } from "discord.js";
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle, } from "discord.js";
 import { prisma } from "..";
 import { embedGreen } from "../const";
 import { MessageError } from "../errors";
 import { ApplicationData, Button } from "../types";
-import { addRole, removeRole, successMessage, followupChannel } from "../settings.json"
 
 
 const button: Button = {
@@ -41,7 +40,7 @@ const button: Button = {
         const applicationData = latestApplication.data as unknown as ApplicationData
 
         // Show details of the latest application
-        const embed = new MessageEmbed()
+        const embed = new EmbedBuilder()
             .setTitle("Past application details")
             .setColor(embedGreen)
             .setDescription(
@@ -58,15 +57,15 @@ const button: Button = {
             )
 
         const components = [
-            new MessageButton({
+            new ButtonBuilder({
                 label: "Back",
-                style: "PRIMARY",
+                style: ButtonStyle.Primary,
                 customId: `past-back:${applicationReference}:0`,
                 disabled: true
             }),
-            new MessageButton({
+            new ButtonBuilder({
                 label: "Earlier",
-                style: "PRIMARY",
+                style: ButtonStyle.Primary,
                 customId: `past-earlier:${applicationReference}:0`,
                 disabled: applications.length <= 1 // Only show next if there is more than one application
             })
@@ -74,7 +73,7 @@ const button: Button = {
 
         await interaction.editReply({
             embeds: [embed],
-            components: [new MessageActionRow().setComponents(components)]
+            components: [new ActionRowBuilder<ButtonBuilder>().setComponents(components)]
         }
         )
 

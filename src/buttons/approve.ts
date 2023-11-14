@@ -1,9 +1,5 @@
-import { ButtonInteraction, MessageEmbed } from "discord.js";
-import { prisma } from "..";
-import { embedGreen } from "../const";
-import { MessageError } from "../errors";
+import { ButtonInteraction, } from "discord.js";
 import { Button } from "../types";
-import { addRole, removeRole, successMessage, followupChannel } from "../settings.json"
 import approveLogic from "./shared-approve";
 
 

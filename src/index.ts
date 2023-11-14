@@ -1,16 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, CommandInteraction, Intents, Interaction, MessageComponentInteraction, MessageEmbed, ModalSubmitInteraction } from 'discord.js';
+import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction } from 'discord.js';
 import { token } from './config.json';
 import { ApplicationCommand, Button, Modal } from './types';
 import { PrismaClient } from '@prisma/client';
 import { MessageError } from './errors';
-import { APIGuildInteraction } from 'discord-api-types/v9';
 import { embedBlue, embedRed } from './const';
 
 export const prisma = new PrismaClient()
 
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const commands: Collection<string, ApplicationCommand> = new Collection();
 const buttons: Collection<string, Button> = new Collection();
@@ -87,7 +86,7 @@ const handleInteractionError = async (
 	If the interaction is not deferred or replied to then reply to it
 	Otherwise the interaction has been replied to so send a followup
   */
-	const embed = new MessageEmbed({
+	const embed = new EmbedBuilder({
 		description: message,
 		color
 	})

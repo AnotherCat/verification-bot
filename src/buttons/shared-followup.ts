@@ -1,4 +1,4 @@
-import { ButtonInteraction, MessageActionRow, Modal, ModalActionRowComponent, TextInputComponent } from "discord.js"
+import { ButtonInteraction, ActionRowBuilder, ModalBuilder, ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js"
 import { prisma } from ".."
 import { MessageError } from "../errors"
 
@@ -41,17 +41,17 @@ const followupLogic = async (
         throw new MessageError("User is not in the guild.")
     }
 
-    const modal = new Modal()
+    const modal = new ModalBuilder()
         .setCustomId(`followup:${applicationReference}`)
         .setTitle("Submit Application")
 
-    const messageInput = new MessageActionRow<ModalActionRowComponent>().addComponents(new TextInputComponent()
+    const messageInput = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
         .setCustomId("message")
         .setLabel("Message to followup with")
         .setMaxLength(1000)
         .setRequired(false)
         .setPlaceholder("Leave blank to not send a message after opening the followup thread")
-        .setStyle("PARAGRAPH"))
+        .setStyle(TextInputStyle.Paragraph))
 
     modal.addComponents(
 

@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { ChannelType, PermissionFlagsBits } from 'discord-api-types/v10';
-import { CommandInteraction, MessageActionRow, MessageButton } from 'discord.js';
+import { PermissionFlagsBits } from 'discord-api-types/v10';
+import { CommandInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { ApplicationCommand } from '../types';
 
 
@@ -36,11 +36,11 @@ const command: ApplicationCommand = {
 	async execute(interaction: CommandInteraction) {
 		await interaction.reply({
 			components: [
-				new MessageActionRow().setComponents([
-					new MessageButton()
+				new ActionRowBuilder<ButtonBuilder>().setComponents([
+					new ButtonBuilder()
 						.setCustomId("submit-application")
 						.setLabel("Submit Application")
-						.setStyle("PRIMARY")
+						.setStyle(ButtonStyle.Primary)
 				])], content: "SUBMIT APPLICATION"
 		})
 	}
