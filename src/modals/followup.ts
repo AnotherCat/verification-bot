@@ -62,18 +62,18 @@ const modal: Modal = {
 
         // For each new line in message content add a ">  " for markdown quotes
 
-        const messageContent = !!messageModalContent
+        const messageContent = messageModalContent
             ? messageModalContent
                 ?.split("\n")
                 .map((line) => line.length > 0 ? `>  ${line}` : "")
                 .join("\n")
             : undefined;
 
-        let followupInitialContent: BaseMessageOptions = {
+        const followupInitialContent: BaseMessageOptions = {
             content: `<@${userId}> a follow up has been opened in response to your application, by <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
-        let followupInitialReopenContent: BaseMessageOptions = {
+        const followupInitialReopenContent: BaseMessageOptions = {
             content: `<@${userId}> a follow up has been reopened in response to your most recent application, by <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };

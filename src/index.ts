@@ -22,12 +22,16 @@ const commandFiles = fs
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 
-	const command = require(filePath) as ApplicationCommand;
+	const command = await import(filePath) as ApplicationCommand;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
 	commands.set(command.data.name, command);
 }
+
+
+
+
 
 const buttonsPath = path.join(__dirname, 'buttons');
 const buttonFiles = fs
@@ -36,7 +40,7 @@ const buttonFiles = fs
 
 for (const file of buttonFiles) {
 	const filePath = path.join(buttonsPath, file);
-	const button = require(filePath) as Button;
+	const button = await import(filePath) as Button;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
@@ -51,7 +55,7 @@ const modalFiles = fs
 
 for (const file of modalFiles) {
 	const filePath = path.join(modalsPath, file);
-	const modal = require(filePath) as Modal;
+	const modal = await import(filePath) as Modal;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
@@ -134,7 +138,7 @@ client.on('interactionCreate', async (interaction) => {
 				ephemeral: true
 			})
 			return
-		};
+		}
 
 		try {
 			await command.execute(interaction);
@@ -151,7 +155,7 @@ client.on('interactionCreate', async (interaction) => {
 				ephemeral: true
 			})
 			return
-		};
+		}
 		try {
 			await button.execute(interaction);
 		}
@@ -167,7 +171,7 @@ client.on('interactionCreate', async (interaction) => {
 				ephemeral: true
 			})
 			return
-		};
+		}
 		try {
 			await modal.execute(interaction);
 		}

@@ -24,8 +24,6 @@ const button: Button = {
             throw new MessageError("This application is not pending.")
         }
 
-        const userId = application.userId.toString()
-
         const modal = new ModalBuilder()
             .setCustomId(interaction.customId)
             .setTitle("Raise application to moderators")
