@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -15,31 +12,26 @@ model Guild {
   verificationSubmissions VerificationSubmission[]
 }
 
+model VerificationSubmission {
+  reference              String             @id @unique
+  userId                 BigInt
+  data                   Json
+  timestamp              DateTime
+  status                 VerificationStatus
+  reviewMessageId        BigInt
+  reviewMessageChannelId BigInt
+  reviewMessageDeleted   Boolean            @default(false)
+  followUpChannelId      BigInt?
+  guildId                BigInt
+  raiseMessageId         BigInt?
+  raiseThreadId          BigInt?
+  guild                  Guild              @relation(fields: [guildId], references: [id])
+}
+
 enum VerificationStatus {
   PENDING // Waiting review
   RAISED // Escalated to another level 
   FOLLOWUP // Waiting for followup
   APPROVED // Application approved 
   DENIED // Application denied 
-
-}
-
-model VerificationSubmission {
-  reference String             @id @unique
-  userId    BigInt
-  data      Json
-  timestamp DateTime
-  status    VerificationStatus
-
-  reviewMessageId        BigInt
-  reviewMessageChannelId BigInt
-  reviewMessageDeleted   Boolean @default(false)
-
-  followUpChannelId BigInt?
-
-  raiseMessageId BigInt?
-  raiseThreadId  BigInt?
-
-  guildId BigInt
-  guild   Guild  @relation(fields: [guildId], references: [id])
 }
