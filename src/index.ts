@@ -22,16 +22,12 @@ const commandFiles = fs
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 
-	const command = await import(filePath) as ApplicationCommand;
+	const command = require(filePath) as ApplicationCommand;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
 	commands.set(command.data.name, command);
 }
-
-
-
-
 
 const buttonsPath = path.join(__dirname, 'buttons');
 const buttonFiles = fs
@@ -40,7 +36,7 @@ const buttonFiles = fs
 
 for (const file of buttonFiles) {
 	const filePath = path.join(buttonsPath, file);
-	const button = await import(filePath) as Button;
+	const button = require(filePath) as Button;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
@@ -55,7 +51,7 @@ const modalFiles = fs
 
 for (const file of modalFiles) {
 	const filePath = path.join(modalsPath, file);
-	const modal = await import(filePath) as Modal;
+	const modal = require(filePath) as Modal;
 
 	// Set a new item in the Collection
 	// With the key as the command name and the value as the exported module
@@ -98,7 +94,7 @@ const handleInteractionError = async (
 	if (interaction.deferred && !interaction.replied) {
 		// if interaction is component or select or modal than send a reply
 		// Otherwise edit reply
-		if (interaction.isMessageComponent() || interaction.isSelectMenu() || interaction.isModalSubmit()) {
+		if (interaction.isMessageComponent() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {
 
 			await interaction.followUp({
 				embeds: [embed],
