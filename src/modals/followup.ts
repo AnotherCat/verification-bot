@@ -17,7 +17,7 @@ import { prisma } from "..";
 import { MessageError } from "../errors";
 import {
     followupChannel as followupChannelId,
-    privateThreads,
+
     followUpPingRoles,
 } from "../settings.json";
 import { Modal } from "../types";
@@ -158,43 +158,27 @@ const modal: Modal = {
         if (!thread) {
 
 
-            if (privateThreads) {
-                // create a private thread with the user, but first check if the bot has permission, and the guild can have private threads
-                if (
-                    !interaction.guild.members.me
-                        .permissionsIn(followupChannel)
-                        .has(PermissionFlagsBits.CreatePrivateThreads) ||
-                    !interaction.guild.members.me
-                        .permissionsIn(followupChannel)
-                        .has(PermissionFlagsBits.SendMessagesInThreads)
-                ) {
-                    throw new MessageError(
-                        "The bot does not have permission to create private threads and send messages in them."
-                    );
-                }
-
-            } else {
-                // create public thread with the user, but first check if the bot has the permission to do so
-
-                if (
-                    !interaction.guild.members.me
-                        .permissionsIn(followupChannel)
-                        .has(PermissionFlagsBits.CreatePublicThreads) ||
-                    !interaction.guild.members.me
-                        .permissionsIn(followupChannel)
-                        .has(PermissionFlagsBits.SendMessagesInThreads)
-                ) {
-                    throw new MessageError(
-                        "The bot does not have permission to create public threads and send messages in them."
-                    );
-                }
+            // create a private thread with the user, but first check if the bot has permission
+            if (
+                !interaction.guild.members.me
+                    .permissionsIn(followupChannel)
+                    .has(PermissionFlagsBits.CreatePrivateThreads) ||
+                !interaction.guild.members.me
+                    .permissionsIn(followupChannel)
+                    .has(PermissionFlagsBits.SendMessagesInThreads) ||
+                !interaction.guild.members.me
+                    .permissionsIn(followupChannel)
+                    .has(PermissionFlagsBits.ViewChannel)
+            ) {
+                throw new MessageError(
+                    "The bot does not have permission to create private threads and send messages in them."
+                );
             }
 
 
 
             thread = await followupChannel.threads.create({
-                // TODO: Decide if public threads should be removed as they were in place when private threads were limited
-                type: privateThreads ? ChannelType.PrivateThread : ChannelType.PublicThread,
+                type: ChannelType.PrivateThread,
                 invitable: false,
                 name: `Follow up for ${member.user.username}`,
                 autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek
