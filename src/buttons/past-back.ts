@@ -71,18 +71,19 @@ const button: Button = {
             )
 
         const components = [
+
+            new ButtonBuilder({
+                label: "Earlier",
+                style: ButtonStyle.Primary,
+                customId: `past-earlier:${applicationReference}:${currentIndex - 1}`,
+                disabled: false
+            }),
             new ButtonBuilder({
                 label: "Back",
                 style: ButtonStyle.Primary,
                 customId: `past-back:${applicationReference}:${currentIndex - 1}`,
                 disabled: currentIndex - 1 <= 0
             }),
-            new ButtonBuilder({
-                label: "Earlier",
-                style: ButtonStyle.Primary,
-                customId: `past-earlier:${applicationReference}:${currentIndex - 1}`,
-                disabled: false
-            })
         ]
 
         await interaction.editReply({

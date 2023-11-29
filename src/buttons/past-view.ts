@@ -65,18 +65,18 @@ const button: Button = {
             )
 
         const components = [
-            new ButtonBuilder({
-                label: "Back",
-                style: ButtonStyle.Primary,
-                customId: `past-back:${applicationReference}:0`,
-                disabled: true
-            }),
+
             new ButtonBuilder({
                 label: "Earlier",
                 style: ButtonStyle.Primary,
                 customId: `past-earlier:${applicationReference}:0`,
                 disabled: applications.length <= 1 // Only show next if there is more than one application
-            })
+            }), new ButtonBuilder({
+                label: "Back",
+                style: ButtonStyle.Primary,
+                customId: `past-back:${applicationReference}:0`,
+                disabled: true
+            }),
         ]
 
         await interaction.editReply({
