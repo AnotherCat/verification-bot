@@ -83,16 +83,7 @@ const modal: Modal = {
                 .setLabel("Override & Approve")
                 .setCustomId(`raise-approve:${applicationReference}`)
                 .setStyle(ButtonStyle.Success),
-
-
-            // If past applications exist, show a button to view them
-            ...(pastApplications.length > 0 ? [
-                new ButtonBuilder()
-                    .setLabel("View Previous")
-                    .setCustomId(`view-past:${applicationReference}`)
-                    .setStyle(ButtonStyle.Primary),
-            ] : []),]
-
+            ]
         let followUpMention = ""
         if (!application.followUpChannelId) {
             components.push(new ButtonBuilder()
@@ -102,11 +93,34 @@ const modal: Modal = {
         } else {
             followUpMention = `\n\nA followup has been opened in: <#${application.followUpChannelId}>`
         }
+        // If past applications exist, show a button to view them
+        if (pastApplications.length > 0) {
+            components.push(
+                new ButtonBuilder()
+                    .setLabel("View Previous")
+                    .setCustomId(`view-past:${applicationReference}`)
+                    .setStyle(ButtonStyle.Primary),
+            )
+        }
 
 
 
-        const raiseReport = await raiseChannel.send({
-            embeds: [new EmbedBuilder({
+
+
+        /*const raiseReport = await raiseChannel.send({
+            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>.`
+        })
+*/
+        //// TODO: check: private?
+        // If the bot has the correct permissions create a public thread on that message
+        const permissionsInRaiseChannel = interaction.guild.members.me.permissionsIn(raiseChannel)
+        if (!(permissionsInRaiseChannel.has(PermissionFlagsBits.CreatePublicThreads) && permissionsInRaiseChannel.has(PermissionFlagsBits.SendMessagesInThreads))) {
+            throw new MessageError("The bot does not have the correct permissions to create a public thread in the raise channel.");
+        }
+        const thread = await raiseChannel.threads.create({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek });
+        // send message pinging
+        const threadMessage = await thread.send({
+            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${raiseRole}> with the reason ${reason}`, embeds: [new EmbedBuilder({
                 title: `Reviewing ${member.user.username}'s application - raised by ${interaction.member.user.username}`,
                 description: `Original Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
                     `\n\n**Age**: ${applicationData.age}`
@@ -124,16 +138,6 @@ const modal: Modal = {
             ]
         })
 
-        //// TODO: check: private?
-        // If the bot has the correct permissions create a public thread on that message
-        const permissionsInRaiseChannel = interaction.guild.members.me.permissionsIn(raiseReport.channel as TextChannel)
-        if (!(permissionsInRaiseChannel.has(PermissionFlagsBits.CreatePublicThreads) && permissionsInRaiseChannel.has(PermissionFlagsBits.SendMessagesInThreads))) {
-            throw new MessageError("The bot does not have the correct permissions to create a public thread in the raise channel.");
-        }
-        const thread = await raiseReport.startThread({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek });
-        // send message pinging
-        await thread.send({ content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${raiseRole}>` })
-
 
         // update the application to be raised
         await prisma.verificationSubmission.update({
@@ -142,19 +146,31 @@ const modal: Modal = {
             }
             , data: {
                 status: "RAISED",
-                raiseMessageId: BigInt(raiseReport.id),
+                raiseMessageId: BigInt(threadMessage.id),
                 raiseThreadId: BigInt(thread.id),
             }
         })
 
-        // update the 
-
         // Update the message to show it's been raised
 
         // Add a note to the end of the embeds description and disable all buttons
+
+        const applicationMessageJumpLink = `https://discordapp.com/channels/${interaction.guild.id}/${thread.id}/${threadMessage.id}`;
+
+
         const embed = EmbedBuilder.from(interaction.message.embeds[0])
-        embed.setDescription(`${embed.data.description}\n\nApplication has been raised. See the report in <#${thread.id}> for more info`)
+        embed.setDescription(`${embed.data.description}\n\nApplication has been raised. \n*See the report in <#${thread.id}> (link below) for more info & action buttons.*`)
         embed.setColor(embedRed)
+
+        const originalMessageComponents = [
+            new ActionRowBuilder<ButtonBuilder>().addComponents([
+                new ButtonBuilder({
+                    label: "View Report",
+                    url: applicationMessageJumpLink,
+                    style: ButtonStyle.Link,
+                }),
+            ]),
+        ];
 
 
         const interactionComponents = interaction.message.components[0]
@@ -177,7 +193,7 @@ const modal: Modal = {
         );
         await interaction.editReply({
             embeds: [embed],
-            components: [newInteractionComponents],
+            components: originalMessageComponents,
         });
 
 
