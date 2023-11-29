@@ -3,11 +3,13 @@ import { prisma } from "..";
 import { embedGreen } from "../const";
 import { MessageError } from "../errors";
 import { ApplicationData, Button } from "../types";
+import { checkReviewerRole } from "../helpers/permissions";
 
 
 const button: Button = {
     customIdLabel: 'past-earlier',
     async execute(interaction: ButtonInteraction) {
+        await checkReviewerRole(interaction)
         await interaction.deferUpdate()
         // First get the applicationId from the customId
         const applicationReference = interaction.customId.split(":")[1]

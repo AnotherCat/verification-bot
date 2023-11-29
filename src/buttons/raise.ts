@@ -2,6 +2,7 @@ import { ButtonInteraction, ActionRowBuilder, ModalBuilder, ModalActionRowCompon
 import { prisma } from "..";
 import { MessageError } from "../errors";
 import { Button } from "../types";
+import { checkReviewerRole } from "../helpers/permissions";
 
 
 // TODO:  no restrictions on approving - and then when approving when folloups and raise's are open and thus have to be closed, it takes too long to create a interaction initial response. Most likely need to defer it. 
@@ -9,6 +10,7 @@ import { Button } from "../types";
 const button: Button = {
     customIdLabel: 'raise',
     async execute(interaction: ButtonInteraction) {
+        await checkReviewerRole(interaction)
         // First get the applicationId from the customId
         const applicationReference = interaction.customId.split(":")[1]
 
