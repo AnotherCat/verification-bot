@@ -73,10 +73,6 @@ const modal: Modal = {
             content: `<@${userId}> a greeter wishes to clarify some details about your application - <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
-        const followupInitialReopenContent: BaseMessageOptions = {
-            content: `<@${userId}> a greeter wishes to clarify some further details about your application - <@${interaction.user.id
-                }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
-        };
         let followupInitialContentSecondMessage: BaseMessageOptions | undefined =
             undefined;
         const applicationMessageJumpLink = `https://discordapp.com/channels/${interaction.guild.id}/${application.reviewMessageChannelId}/${application.reviewMessageId}`;
@@ -103,8 +99,6 @@ const modal: Modal = {
             } else {
                 followupInitialContent.content += `\n\n${messageContent}`;
                 followupInitialContent.components = components;
-                followupInitialReopenContent.content += `\n\n${messageContent}`;
-                followupInitialReopenContent.components = components;
             }
         } else {
             followupInitialContent.components = components;
@@ -142,22 +136,22 @@ const modal: Modal = {
             // Find thread
             thread = await followupChannel.threads.fetch(previousFollowupChannelId);
             // If thread is not found, create a new thread
-            if (thread) {
 
-                // first check that the bot can manage threads and can send messages in threads
-                if (!interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.ManageThreads) || !interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.SendMessagesInThreads)) {
-                    throw new MessageError("The bot does not have permissions to manage threads and send messages in them.");
-                }
-                await thread.send(followupInitialReopenContent);
-                if (followupInitialContentSecondMessage) {
-                    await thread.send(followupInitialContentSecondMessage);
-                }
-            }
 
         }
-        if (!thread) {
+        if (thread) {
 
+            // first check that the bot can manage threads and can send messages in threads
+            if (!interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.ManageThreads) || !interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.SendMessagesInThreads)) {
+                throw new MessageError("The bot does not have permissions to manage threads and send messages in them.");
+            }
+            await thread.edit({
+                locked: false,
+                archived: false,
+                reason: "Reopening followup thread",
+            })
 
+        } else {
             // create a private thread with the user, but first check if the bot has permission
             if (
                 !interaction.guild.members.me
@@ -175,18 +169,16 @@ const modal: Modal = {
                 );
             }
 
-
-
             thread = await followupChannel.threads.create({
                 type: ChannelType.PrivateThread,
                 invitable: false,
                 name: `Follow up for ${member.user.username}`,
                 autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek
             });
-            await thread.send(followupInitialContent);
-            if (followupInitialContentSecondMessage) {
-                await thread.send(followupInitialContentSecondMessage);
-            }
+        }
+        const firstMessage = await thread.send(followupInitialContent);
+        if (followupInitialContentSecondMessage) {
+            await thread.send(followupInitialContentSecondMessage);
         }
 
         // update the application status to followup
@@ -207,6 +199,8 @@ const modal: Modal = {
 
         embed.setDescription(`${embed.data.description}\n\nFollowup has been opened in: <#${thread.id}>`)
 
+        const followupMessageJumpLink = `https://discordapp.com/channels/${interaction.guild.id}/${thread.id}/${firstMessage.id}`;
+
         const interactionComponents = interaction.message.components[0]
             .components as ActionRowComponent[]
         const newInteractionComponents = new ActionRowBuilder<ButtonBuilder>()
@@ -217,8 +211,11 @@ const modal: Modal = {
                     component.customId.includes("followup")) {
 
 
-                    const newComponent = ButtonBuilder.from(component);
-                    newComponent.setDisabled(true);
+                    const newComponent = new ButtonBuilder({
+                        label: "View Followup",
+                        url: followupMessageJumpLink,
+                        style: ButtonStyle.Link,
+                    })
                     newInteractionComponents.addComponents(newComponent);
                 }
                 else { newInteractionComponents.addComponents(ButtonBuilder.from(component)); }
