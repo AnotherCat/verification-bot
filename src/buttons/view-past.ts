@@ -12,21 +12,29 @@ const button: Button = {
         // First get the applicationId from the customId
         const applicationReference = interaction.customId.split(":")[1]
 
-        // Check the status of the current user, it must be pending or followup
+        // Check the status of the current user, it must be pending, raised, or followup.
+        // This is to ensure that the data is only displayed for current applications
         const application = await prisma.verificationSubmission.findUnique({
             where: {
                 reference: applicationReference,
+                status: {
+                    in: ["PENDING", "RAISED", "FOLLOWUP"]
+                }
 
             }
         })
+        console.log(application)
         if (!application) {
             throw new MessageError("No application found for this user.")
         }
 
-        // Get all applications, from latest to oldest
+        // Get all applications, from latest to oldest, that are complete 
         const applications = await prisma.verificationSubmission.findMany({
             where: {
                 userId: application.userId,
+                status: {
+                    in: ["APPROVED", "DENIED"]
+                }
             }, orderBy: { timestamp: "desc" }
         })
         // If applications is empty, throw error
