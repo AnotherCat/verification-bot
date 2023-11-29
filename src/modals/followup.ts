@@ -70,11 +70,11 @@ const modal: Modal = {
             : undefined;
 
         const followupInitialContent: BaseMessageOptions = {
-            content: `<@${userId}> a follow up has been opened in response to your application, by <@${interaction.user.id
+            content: `<@${userId}> a greeter wishes to clarify some details about your application - <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
         const followupInitialReopenContent: BaseMessageOptions = {
-            content: `<@${userId}> a follow up has been reopened in response to your most recent application, by <@${interaction.user.id
+            content: `<@${userId}> a greeter wishes to clarify some further details about your application - <@${interaction.user.id
                 }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
         let followupInitialContentSecondMessage: BaseMessageOptions | undefined =
