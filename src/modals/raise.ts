@@ -1,15 +1,12 @@
 
 import {
     ActionRowBuilder,
-    ActionRowComponent,
     ButtonBuilder,
     ButtonStyle,
     ChannelType,
-    ComponentType,
     EmbedBuilder,
     ModalSubmitInteraction,
     PermissionFlagsBits,
-    TextChannel,
     ThreadAutoArchiveDuration,
 } from "discord.js";
 import { prisma } from "..";
@@ -18,7 +15,7 @@ import { MessageError } from "../errors";
 import {
 
     raiseChannel as raiseChannelId,
-    raiseRole
+    raiseRole, followupChannel as followUpChannelId,
 } from "../settings.json";
 import { ApplicationData, Modal } from "../types";
 
@@ -92,6 +89,18 @@ const modal: Modal = {
                 .setStyle(ButtonStyle.Primary))
         } else {
             followUpMention = `\n\nA followup has been opened in: <#${application.followUpChannelId}>`
+
+            const followUpParentChannel = await interaction.guild.channels.fetch(followUpChannelId)
+            if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
+                const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
+                if (thread) {
+                    components.push(new ButtonBuilder()
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(`https://discord.com/channels/${interaction.guild.id}/${thread.id}/${thread.lastMessageId}`)
+                        .setLabel("View followup thread"))
+                }
+            }
+
         }
         // If past applications exist, show a button to view them
         if (pastApplications.length > 0) {
@@ -105,13 +114,6 @@ const modal: Modal = {
 
 
 
-
-
-        /*const raiseReport = await raiseChannel.send({
-            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>.`
-        })
-*/
-        //// TODO: check: private?
         // If the bot has the correct permissions create a public thread on that message
         const permissionsInRaiseChannel = interaction.guild.members.me.permissionsIn(raiseChannel)
         if (!(permissionsInRaiseChannel.has(PermissionFlagsBits.CreatePublicThreads) && permissionsInRaiseChannel.has(PermissionFlagsBits.SendMessagesInThreads))) {
@@ -173,24 +175,7 @@ const modal: Modal = {
         ];
 
 
-        const interactionComponents = interaction.message.components[0]
-            .components as ActionRowComponent[]
-        const newInteractionComponents = new ActionRowBuilder<ButtonBuilder>()
-        interactionComponents.forEach((component) => {
-            if (
-                component.type === ComponentType.Button) {
-                if (
-                    component.customId.includes("followup")) {
 
-
-                    const newComponent = ButtonBuilder.from(component);
-                    newComponent.setDisabled(true);
-                    newInteractionComponents.addComponents(newComponent);
-                }
-                else { newInteractionComponents.addComponents(ButtonBuilder.from(component)); }
-            }
-        }
-        );
         await interaction.editReply({
             embeds: [embed],
             components: originalMessageComponents,
