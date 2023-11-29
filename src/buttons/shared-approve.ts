@@ -38,7 +38,6 @@ const approveLogic = async ({
     if (!logChannel || !logChannel.isTextBased() || logChannel.isDMBased()) {
         throw new MessageError("Approve log channel is not a text channel.")
     }
-    // TODO: Better to ask for forgiveness?
     if (!logChannel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.SendMessages) || !logChannel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ViewChannel)) {
         throw new MessageError("I do not have the required permissions to send messages to the approve log channel.")
     }
