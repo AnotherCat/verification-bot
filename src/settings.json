@@ -1,15 +1,15 @@
 {
-    "reviewChannel": "990903084685340672",
-    "followupChannel": "976354573524566056",
-    "raiseChannel": "995984061132718110",
-    "approveLogChannel": "996005749266337812",
-    "raiseRole": "866628390211289108",
-    "reviewerRole": "1033600970367713290",
+    "reviewChannel": "1174554978988339231",
+    "followupChannel": "1174554863720464475",
+    "raiseChannel": "1174555712374984784",
+    "approveLogChannel": "1174554927062863922",
+    "raiseRole": "1174555821233930260",
+    "reviewerRole": "1174555963974484030",
     "followUpPingRoles": [],
-    "addRole": "996168269260140575",
-    "removeRole": "996168171423809666",
+    "addRole": "1174556032471662713",
+    "removeRole": "1174556157986213888",
     "successMessage": {
-        "channelId": "843081989762580510",
+        "channelId": "859345627002699780",
         "message": "welcome {user}"
     },
 }
