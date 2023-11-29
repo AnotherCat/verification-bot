@@ -114,7 +114,7 @@ const modal: Modal = {
             embeds: [
                 new EmbedBuilder({
                     title: "Application Submitted",
-                    description: `Application successfully! Your application will now be manually reviewed.`
+                    description: `Your application will now be manually reviewed. \n*You may dismiss this message.* `
                     , color: embedGreen
                 })
             ],
