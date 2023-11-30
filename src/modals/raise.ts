@@ -47,9 +47,12 @@ const modal: Modal = {
 
         const userId = application.userId.toString();
 
-        const pastApplications = await prisma.verificationSubmission.findMany({
+        const pastApplications = await prisma.verificationSubmission.count({
             where: {
                 userId: BigInt(userId),
+                status: {
+                    in: ["APPROVED", "DENIED"],
+                },
             },
             orderBy: { timestamp: "asc" }, // So that zero is the most recent
         })
@@ -103,11 +106,11 @@ const modal: Modal = {
 
         }
         // If past applications exist, show a button to view them
-        if (pastApplications.length > 0) {
+        if (pastApplications > 0) {
             components.push(
                 new ButtonBuilder()
                     .setLabel("View Previous")
-                    .setCustomId(`view-past:${applicationReference}`)
+                    .setCustomId(`view-past:${applicationReference}:0`)
                     .setStyle(ButtonStyle.Primary),
             )
         }

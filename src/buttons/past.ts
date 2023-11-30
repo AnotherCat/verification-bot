@@ -4,11 +4,12 @@ import sharedButtonLogic from "./shared-past"
 
 
 const button: Button = {
-    customIdLabel: "view-past",
+    customIdLabel: "past",
     async execute(interaction: ButtonInteraction) {
         const data = await sharedButtonLogic(interaction)
-        await interaction.reply({ ...data, ephemeral: true })
+        await interaction.update(data)
     }
+
 }
 
 module.exports = button

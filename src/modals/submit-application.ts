@@ -76,7 +76,7 @@ const modal: Modal = {
                     ...(pastApplications.length > 0 ? [
                         new ButtonBuilder()
                             .setLabel("View Previous")
-                            .setCustomId(`view-past:${applicationReference}`)
+                            .setCustomId(`view-past:${applicationReference}:0`)
                             .setStyle(ButtonStyle.Primary),
                     ] : []),
                 )
