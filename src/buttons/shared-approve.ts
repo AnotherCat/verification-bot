@@ -131,7 +131,7 @@ const approveLogic = async ({
 
     // Close and lock the followup thread 
     if (followupThread) {
-        await followupThread.send({ content: "The user has been approved - this thread should now be closed", components: [new ActionRowBuilder<ButtonBuilder>().setComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(logMessage.url).setLabel("View log message"))] })
+        await followupThread.send({ content: `The user has been approved - this thread should now be closed. [Click here](${logMessage.url}) for log message`, })
         // Check if bot has MANAGE_THREADS permission
         if (followupThread && followupThread.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
             // TODO checkup on how thread permissions work now 
@@ -148,7 +148,7 @@ const approveLogic = async ({
 
     // Close and lock the raise thread
     if (raiseThread) {
-        await raiseThread.send({ content: "The user has been approved - this thread should now be closed", components: [new ActionRowBuilder<ButtonBuilder>().setComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setURL(logMessage.url).setLabel("View log message"))] })
+        await raiseThread.send({ content: `The user has been approved - this thread should now be closed. [Click here](${logMessage.url}) for log message`, })
         // Check if bot has MANAGE_THREADS permission
         if (raiseThread && raiseThread.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
             await raiseThread.edit({
@@ -162,15 +162,6 @@ const approveLogic = async ({
     }
 
 
-
-
-
-
-
-
-
-
-
     // Remove the application message
     const reviewChannel = await interaction.guild.channels.fetch(reviewChannelId)
     if (reviewChannel.type !== ChannelType.GuildText) {
@@ -179,7 +170,8 @@ const approveLogic = async ({
     await (await reviewChannel.messages.fetch(application.reviewMessageId.toString())).delete()
 
     // Update the interaction's message
-    interaction.update({
+    // TODO: INTERACTION ALREADY REPLIED
+    interaction.editReply({
         embeds: [
             new EmbedBuilder(interaction.message.embeds[0]).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
         ],
@@ -192,18 +184,6 @@ const approveLogic = async ({
             }
         }))]
     })
-
-    // Update the interaction reply with a confirmation for the approver 
-
-    interaction.editReply({
-
-        embeds: [new EmbedBuilder({ description: 'User approved.', color: embedGreen })]
-    })
-
-
-
-
-
 
 
 }

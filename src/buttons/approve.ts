@@ -10,7 +10,7 @@ const button: Button = {
 
 
         await checkReviewerRole(interaction)
-        await interaction.deferReply({ ephemeral: true })
+        await interaction.deferUpdate()
         await approveLogic({ interaction })
 
 
