@@ -5,7 +5,6 @@ import { Button } from "../types";
 import { checkReviewerRole } from "../helpers/permissions";
 
 
-// TODO:  no restrictions on approving - and then when approving when folloups and raise's are open and thus have to be closed, it takes too long to create a interaction initial response. Most likely need to defer it. 
 
 const button: Button = {
     customIdLabel: 'raise',

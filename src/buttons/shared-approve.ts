@@ -92,7 +92,7 @@ const approveLogic = async ({
 
 
 
-    // TODO check this nonsense 
+
     let followupThread: ThreadChannel | undefined
     if (application.followUpChannelId) {
         const followUpParentChannel = await interaction.guild.channels.fetch(followUpChannelId)
@@ -134,7 +134,7 @@ const approveLogic = async ({
         await followupThread.send({ content: `The user has been approved - this thread should now be closed. [Click here](${logMessage.url}) for log message`, })
         // Check if bot has MANAGE_THREADS permission
         if (followupThread && followupThread.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
-            // TODO checkup on how thread permissions work now 
+
             await followupThread.edit({
                 locked: true,
                 archived: true,
@@ -170,12 +170,10 @@ const approveLogic = async ({
     await (await reviewChannel.messages.fetch(application.reviewMessageId.toString())).delete()
 
     // Update the interaction's message
-    // TODO: INTERACTION ALREADY REPLIED
     interaction.editReply({
         embeds: [
             new EmbedBuilder(interaction.message.embeds[0]).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
         ],
-        // TODO: Check if this works as a additional step ([0].components) has been added
         components: [new ActionRowBuilder<ButtonBuilder>().setComponents(interaction.message.components[0].components?.map(receivedComponent => {
             if (receivedComponent.type === ComponentType.Button) {
                 const component = ButtonBuilder.from(receivedComponent)

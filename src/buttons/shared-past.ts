@@ -46,7 +46,6 @@ async function sharedLogic(interaction: ButtonInteraction): Promise<{
 
     // Check if the target index in in range
     if (targetIndex < 0 || targetIndex >= count) {
-        // TODO: Better error
         throw new MessageError("Invalid index.")
     }
 
