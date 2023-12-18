@@ -123,7 +123,6 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
     const logMessage = await logChannel.send({ embeds: [logEmbed], components: logActionRow.components.length > 0 ? [logActionRow] : [] })
 
     // Close and lock the followup thread 
-    // TODO: Also disable buttons
     if (followupThread) {
         await followupThread.send({ content: `The user has ${type === "ban" ? "been denied (banned))" : type === "kick" ? "been denied (kicked)" : "left the server"} - this thread should now be closed. [Click here](${logMessage.url}) for log message`, })
         // Check if bot has MANAGE_THREADS permission
