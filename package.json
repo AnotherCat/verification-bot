@@ -21,7 +21,7 @@
     "tsc-watch": "^6.0.4"
   },
   "scripts": {
-    "build": "tsc && yarn sentry:sourcemaps",
+    "build": "tsc",
     "start": "node .",
     "start:deploy": "node dist/deploy-commands.js",
     "go": "yarn build && yarn start",
