@@ -15,6 +15,9 @@ RUN yarn install --immutable
 COPY . .
 
 RUN yarn generate
-RUN yarn build 
+RUN --mount=type=secret,id=sentry_auth_token yarn build 
+
+
+
 
 CMD [ "yarn", "start" ]
