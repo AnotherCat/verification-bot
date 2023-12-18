@@ -8,6 +8,10 @@ const button: Button = {
     customIdLabel: 'submit-application-confirm',
     async execute(interaction: ButtonInteraction) {
 
+        if (!interaction.guild || !interaction.member) {
+            throw new Error("This command can only be used in a server.");
+        }
+
         // Check if the current user has a pending or raised application 
         const application = await prisma.verificationSubmission.findFirst({
             where: {

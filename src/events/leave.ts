@@ -1,7 +1,6 @@
-import { ActionRowBuilder, AuditLogEvent, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, EmbedBuilder, Guild, GuildMember, PartialGuildMember, PermissionFlagsBits, SnowflakeUtil, ThreadChannel, User } from "discord.js";
-import { prisma } from "..";
+import { APIEmbed, ActionRowBuilder, AuditLogEvent, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, EmbedBuilder, Guild, GuildMember, PartialGuildMember, PermissionFlagsBits, SnowflakeUtil, ThreadChannel, User } from "discord.js";
+import { config, prisma } from "..";
 import { ApplicationData } from "../types";
-import { followupChannel as followUpChannelId, approveLogChannel, raiseChannel, reviewChannel as reviewChannelId } from "../settings.json"
 
 import { MessageError } from "../errors";
 import { embedOrange, embedRed, embedYellow } from "../const";
@@ -21,7 +20,7 @@ export async function onLeave(member: GuildMember | PartialGuildMember) {
         after: SnowflakeUtil.generate({ timestamp: Date.now() - 1000 * 45 }).toString(),
     })
     // filter logs by the user & if it was recent (last 10m)
-    const logs = fetchedLogs.entries.filter(entry => entry.target.id === member.user.id)
+    const logs = fetchedLogs.entries.filter(entry => entry.targetId === member.user.id)
     // loop through and use the first kick or ban
     let type: LeaveType = "leave"
     let reason = ""
@@ -64,7 +63,12 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
     // red: ban, orange: kick, yellow: leave
     const embedColor = type === "ban" ? embedRed : type === "kick" ? embedOrange : embedYellow;
     const applicationData = application.data as unknown as ApplicationData
-    const logChannel = await guild.channels.fetch(approveLogChannel)
+    const logChannel = await guild.channels.fetch(config.APPROVE_LOG_CHANNEL)
+
+    if (!guild.members.me) {
+        throw new Error("Bot is not in guild.")
+    }
+
     if (!logChannel || !logChannel.isTextBased() || logChannel.isDMBased()) {
         throw new Error("Approve log channel is not a text channel.")
     }
@@ -97,7 +101,7 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
 
     let followupThread: ThreadChannel | undefined
     if (application.followUpChannelId) {
-        const followUpParentChannel = await guild.channels.fetch(followUpChannelId)
+        const followUpParentChannel = await guild.channels.fetch(config.FOLLOWUP_CHANNEL)
         if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
             const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
             if (thread) {
@@ -109,7 +113,7 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
 
     let raiseThread: ThreadChannel | undefined
     if (application.raiseThreadId) {
-        const raiseParentChannel = await guild.channels.fetch(raiseChannel)
+        const raiseParentChannel = await guild.channels.fetch(config.RAISE_CHANNEL)
         if (raiseParentChannel && raiseParentChannel.type === ChannelType.GuildText) {
             const thread = await raiseParentChannel.threads.fetch(application.raiseThreadId.toString(),)
             if (thread) {
@@ -141,23 +145,25 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
     if (raiseThread) {
         await raiseThread.send({ content: `The user has ${type === "ban" ? "been denied (banned))" : type === "kick" ? "been denied (kicked)" : "left the server"} - this thread should now be closed. [Click here](${logMessage.url}) for log message`, })
         // Edit raise message 
-        await raiseThread.messages.fetch(application.raiseMessageId.toString()).then(async (message) => {
-            await message.edit({
-                embeds: [
-                    new EmbedBuilder(message.embeds[0]).setDescription(message.embeds[0].description + "\n\n" + `The user has ${type === "ban" ? "been denied (banned))" : type === "kick" ? "been denied (kicked)" : "left the server"}`).setColor(embedColor)
-                ],
-                components: [new ActionRowBuilder<ButtonBuilder>().setComponents(message.components[0].components?.map(receivedComponent => {
-                    if (receivedComponent.type === ComponentType.Button) {
-                        const component = ButtonBuilder.from(receivedComponent)
-                        component.setDisabled(true)
-                        return component
-                    }
-                }))]
+        if (application.raiseMessageId !== null) {
+            await raiseThread.messages.fetch(application.raiseMessageId.toString()).then(async (message) => {
+                await message.edit({
+                    embeds: [
+                        new EmbedBuilder(message.embeds[0] as APIEmbed).setDescription(message.embeds[0].description + "\n\n" + `The user has ${type === "ban" ? "been denied (banned))" : type === "kick" ? "been denied (kicked)" : "left the server"}`).setColor(embedColor)
+                    ],
+                    components: [new ActionRowBuilder<ButtonBuilder>().setComponents(message.components[0].components?.map(receivedComponent => {
+                        if (receivedComponent.type === ComponentType.Button) {
+                            const component = ButtonBuilder.from(receivedComponent)
+                            component.setDisabled(true)
+                            return component
+                        }
+                    }).filter((component): component is ButtonBuilder => Boolean(component)) ?? [])]
+                })
             })
-        })
+        }
         // Check if bot has MANAGE_THREADS permission
 
-        if (raiseThread && raiseThread.permissionsFor(guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
+        if (raiseThread.permissionsFor(guild.members.me).has(PermissionFlagsBits.ManageThreads)) {
             await raiseThread.edit({
                 locked: true,
                 archived: true,
@@ -169,8 +175,8 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
     }
 
     // Remove the application message
-    const reviewChannel = await guild.channels.fetch(reviewChannelId)
-    if (reviewChannel.type !== ChannelType.GuildText) {
+    const reviewChannel = await guild.channels.fetch(config.REVIEW_CHANNEL)
+    if (!reviewChannel || reviewChannel.type !== ChannelType.GuildText) {
         throw new MessageError("Review channel is not a text channel.")
     }
     await (await reviewChannel.messages.fetch(application.reviewMessageId.toString())).delete()

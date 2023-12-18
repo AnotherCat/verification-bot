@@ -13,13 +13,9 @@ import {
     ThreadChannel,
     EmbedBuilder,
 } from "discord.js";
-import { prisma } from "..";
+import { config, prisma } from "..";
 import { MessageError } from "../errors";
-import {
-    followupChannel as followupChannelId,
 
-    followUpPingRoles,
-} from "../settings.json";
 import { Modal } from "../types";
 
 const modal: Modal = {
@@ -27,6 +23,10 @@ const modal: Modal = {
     async execute(interaction: ModalSubmitInteraction) {
         // defer update
         await interaction.deferUpdate();
+
+        if (!interaction.guild || !interaction.member || !interaction.message) {
+            throw new Error("This command can only be used in a server.");
+        }
 
         // get applicationId from customId
         const applicationReference = interaction.customId.split(":")[1];
@@ -71,7 +71,7 @@ const modal: Modal = {
 
         const followupInitialContent: BaseMessageOptions = {
             content: `<@${userId}> a greeter wishes to clarify some details about your application - <@${interaction.user.id
-                }>. ${followUpPingRoles.map((roleId) => `<@&${roleId}>`).join(" ")}`,
+                }>. <@&${config.FOLLOWUP_PING_ROLE}>`
         };
         let followupInitialContentSecondMessage: BaseMessageOptions | undefined =
             undefined;
@@ -88,7 +88,7 @@ const modal: Modal = {
         ];
         if (messageContent) {
             if (
-                messageContent.length + followupInitialContent.content.length + 2 >
+                messageContent.length + followupInitialContent.content!.length + 2 >
                 2000
             ) {
                 followupInitialContentSecondMessage = {
@@ -107,14 +107,14 @@ const modal: Modal = {
         // get the followup channel
 
         const followupChannel = await interaction.guild.channels.fetch(
-            followupChannelId
+            config.FOLLOWUP_CHANNEL
         );
 
-        if (followupChannel.type !== ChannelType.GuildText) {
+        if (!followupChannel || followupChannel.type !== ChannelType.GuildText) {
             throw new MessageError("Followup channel is not a text channel.");
         }
 
-        let thread: ThreadChannel;
+        let thread: ThreadChannel | undefined = undefined
 
         // Find any previous followups that have been opened for this user
         // Do this by searching for records for that userId, and where followUpChannelId is not null
@@ -131,18 +131,18 @@ const modal: Modal = {
             },
         });
 
-        const previousFollowupChannelId = previousFollowup?.followUpChannelId.toString();
+        const previousFollowupChannelId = previousFollowup?.followUpChannelId?.toString();
         if (previousFollowupChannelId) {
             // Find thread
-            thread = await followupChannel.threads.fetch(previousFollowupChannelId);
+            thread = (await followupChannel.threads.fetch(previousFollowupChannelId))!
             // If thread is not found, create a new thread
 
 
         }
-        if (thread) {
+        if (thread !== undefined) {
 
             // first check that the bot can manage threads and can send messages in threads
-            if (!interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.ManageThreads) || !interaction.guild.members.me.permissionsIn(followupChannel).has(PermissionFlagsBits.SendMessagesInThreads)) {
+            if (!interaction.guild.members!.me!.permissionsIn(followupChannel).has(PermissionFlagsBits.ManageThreads) || !interaction.guild.members!.me!.permissionsIn(followupChannel).has(PermissionFlagsBits.SendMessagesInThreads)) {
                 throw new MessageError("The bot does not have permissions to manage threads and send messages in them.");
             }
             await thread.edit({
@@ -154,13 +154,13 @@ const modal: Modal = {
         } else {
             // create a private thread with the user, but first check if the bot has permission
             if (
-                !interaction.guild.members.me
+                !interaction.guild.members!.me!
                     .permissionsIn(followupChannel)
                     .has(PermissionFlagsBits.CreatePrivateThreads) ||
-                !interaction.guild.members.me
+                !interaction.guild.members!.me!
                     .permissionsIn(followupChannel)
                     .has(PermissionFlagsBits.SendMessagesInThreads) ||
-                !interaction.guild.members.me
+                !interaction.guild.members!.me!
                     .permissionsIn(followupChannel)
                     .has(PermissionFlagsBits.ViewChannel)
             ) {
@@ -208,7 +208,7 @@ const modal: Modal = {
             if (
                 component.type === ComponentType.Button) {
                 if (
-                    component.customId.includes("followup")) {
+                    component.customId?.includes("followup")) {
 
 
                     const newComponent = new ButtonBuilder({

@@ -5,7 +5,9 @@ import { MessageError } from "../errors"
 const followupLogic = async (
     interaction: ButtonInteraction,
 ) => {
-
+    if (!interaction.guild || !interaction.member) {
+        throw new Error("This command can only be used in a server.");
+    }
 
     // First get the applicationId from the customId
     const applicationReference = interaction.customId.split(":")[1]

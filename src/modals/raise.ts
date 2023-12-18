@@ -9,14 +9,10 @@ import {
     PermissionFlagsBits,
     ThreadAutoArchiveDuration,
 } from "discord.js";
-import { prisma } from "..";
+import { config, prisma } from "..";
 import { embedRed } from "../const";
 import { MessageError } from "../errors";
-import {
 
-    raiseChannel as raiseChannelId,
-    raiseRole, followupChannel as followUpChannelId,
-} from "../settings.json";
 import { ApplicationData, Modal } from "../types";
 
 const modal: Modal = {
@@ -24,6 +20,10 @@ const modal: Modal = {
     async execute(interaction: ModalSubmitInteraction) {
         // defer update
         await interaction.deferUpdate();
+
+        if (!interaction.guild || !interaction.member || !interaction.message) {
+            throw new Error("This command can only be used in a server.");
+        }
 
         // get applicationId from customId
         const applicationReference = interaction.customId.split(":")[1];
@@ -69,9 +69,9 @@ const modal: Modal = {
             "reason"
         )
             ;
-        const raiseChannel = await interaction.guild.channels.fetch(raiseChannelId);
+        const raiseChannel = await interaction.guild.channels.fetch(config.RAISE_CHANNEL);
 
-        if (raiseChannel.type !== ChannelType.GuildText) {
+        if (!raiseChannel || raiseChannel.type !== ChannelType.GuildText) {
             throw new MessageError("Raise channel is not a text channel.");
         }
 
@@ -93,7 +93,7 @@ const modal: Modal = {
         } else {
             followUpMention = `\n\nA followup has been opened in: <#${application.followUpChannelId}>`
 
-            const followUpParentChannel = await interaction.guild.channels.fetch(followUpChannelId)
+            const followUpParentChannel = await interaction.guild.channels.fetch(config.FOLLOWUP_CHANNEL)
             if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
                 const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
                 if (thread) {
@@ -118,14 +118,14 @@ const modal: Modal = {
 
 
         // If the bot has the correct permissions create a public thread on that message
-        const permissionsInRaiseChannel = interaction.guild.members.me.permissionsIn(raiseChannel)
+        const permissionsInRaiseChannel = interaction.guild.members!.me!.permissionsIn(raiseChannel)
         if (!(permissionsInRaiseChannel.has(PermissionFlagsBits.CreatePublicThreads) && permissionsInRaiseChannel.has(PermissionFlagsBits.SendMessagesInThreads))) {
             throw new MessageError("The bot does not have the correct permissions to create a public thread in the raise channel.");
         }
         const thread = await raiseChannel.threads.create({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek });
         // send message pinging
         const threadMessage = await thread.send({
-            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${raiseRole}> with the reason ${reason}`, embeds: [new EmbedBuilder({
+            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${config.RAISE_ROLE}> with the reason ${reason}`, embeds: [new EmbedBuilder({
                 title: `Reviewing ${member.user.username}'s application - raised by ${interaction.member.user.username}`,
                 description: `Original Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
                     `\n\n**Age**: ${applicationData.age}`

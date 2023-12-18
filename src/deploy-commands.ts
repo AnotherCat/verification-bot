@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { clientId, guildId, token } from './config.json';
+import { config } from '.';
 
 const commands = [];
 const commandsPath = path.join(__dirname, 'commands');
@@ -15,13 +15,14 @@ const commandFiles = fs
 for (const file of commandFiles) {
 	const filePath = path.join(commandsPath, file);
 	import(filePath).then((command: { default: { data: CommandInteraction } }) => {
+		// @ts-expect-error not sure why this is happening
 		commands.push(command.default.data.toJSON());
 	});
 }
 
-const rest = new REST({ version: '10' }).setToken(token);
+const rest = new REST({ version: '10' }).setToken(config.TOKEN);
 
 rest
-	.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands })
+	.put(Routes.applicationGuildCommands(config.CLIENT_ID, config.GUILD_ID), { body: commands })
 	.then(() => console.log('Successfully registered application commands.'))
 	.catch(console.error);

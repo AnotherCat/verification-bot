@@ -1,14 +1,17 @@
-import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ThreadChannel, PermissionFlagsBits, ChannelType, ButtonStyle, ComponentType } from "discord.js"
-import { prisma } from ".."
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ThreadChannel, PermissionFlagsBits, ChannelType, ButtonStyle, ComponentType, APIEmbed } from "discord.js"
+import { config, prisma } from ".."
 import { embedGreen } from "../const"
 import { MessageError } from "../errors"
-import { addRole, removeRole, successMessage, followupChannel as followUpChannelId, approveLogChannel, raiseChannel, reviewChannel as reviewChannelId } from "../settings.json"
 import { ApplicationData } from "../types"
 
 const approveLogic = async ({
     interaction
 
 }: { interaction: ButtonInteraction }) => {
+
+    if (!interaction.guild || !interaction.member || !interaction.guild.members?.me) {
+        throw new Error("This command can only be used in a server.");
+    }
     // First get the applicationId from the customId
     const applicationReference = interaction.customId.split(":")[1]
 
@@ -34,7 +37,7 @@ const approveLogic = async ({
 
     const member = await interaction.guild.members.fetch(userId)
 
-    const logChannel = await interaction.guild.channels.fetch(approveLogChannel)
+    const logChannel = await interaction.guild.channels.fetch(config.APPROVE_LOG_CHANNEL)
     if (!logChannel || !logChannel.isTextBased() || logChannel.isDMBased()) {
         throw new MessageError("Approve log channel is not a text channel.")
     }
@@ -64,11 +67,11 @@ const approveLogic = async ({
     }
     // Update the user's roles
     // first check if the bot has the permissions to do so, and has the right role permissions 
-    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles) || interaction.guild.members.me.roles.highest.comparePositionTo(addRole) <= 0 || interaction.guild.members.me.roles.highest.comparePositionTo(removeRole) <= 0 || !member.manageable) {
+    if (!interaction.guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles) || interaction.guild.members.me.roles.highest.comparePositionTo(config.ADD_ROLE) <= 0 || interaction.guild.members.me.roles.highest.comparePositionTo(config.REMOVE_ROLE) <= 0 || !member.manageable) {
         throw new MessageError("I do not have the required permissions to add or remove the roles for that user.")
     }
-    await (member).roles.add(addRole)
-    await member.roles.remove(removeRole)
+    await (member).roles.add(config.ADD_ROLE)
+    await member.roles.remove(config.REMOVE_ROLE)
 
 
     // Update the status to approved
@@ -84,10 +87,10 @@ const approveLogic = async ({
 
     // send success message
     // get channel
-    const channel = await interaction.guild.channels.fetch(successMessage.channelId)
+    const channel = await interaction.guild.channels.fetch(config.SUCCESS_CHANNEL_ID)
     // send message
     if (channel && channel.permissionsFor(interaction.guild.members.me).has(PermissionFlagsBits.SendMessages) && channel.isTextBased()) {
-        await channel.send(successMessage.message.replace("{user}", `<@${userId}>`))
+        await channel.send(config.SUCCESS_MESSAGE.replace("{user}", `<@${userId}>`))
     }
 
 
@@ -95,7 +98,7 @@ const approveLogic = async ({
 
     let followupThread: ThreadChannel | undefined
     if (application.followUpChannelId) {
-        const followUpParentChannel = await interaction.guild.channels.fetch(followUpChannelId)
+        const followUpParentChannel = await interaction.guild.channels.fetch(config.FOLLOWUP_CHANNEL)
         if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
             const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
             if (thread) {
@@ -107,7 +110,7 @@ const approveLogic = async ({
 
     let raiseThread: ThreadChannel | undefined
     if (application.raiseThreadId) {
-        const raiseParentChannel = await interaction.guild.channels.fetch(raiseChannel)
+        const raiseParentChannel = await interaction.guild.channels.fetch(config.RAISE_CHANNEL)
         if (raiseParentChannel && raiseParentChannel.type === ChannelType.GuildText) {
             const thread = await raiseParentChannel.threads.fetch(application.raiseThreadId.toString(),)
             if (thread) {
@@ -163,8 +166,8 @@ const approveLogic = async ({
 
 
     // Remove the application message
-    const reviewChannel = await interaction.guild.channels.fetch(reviewChannelId)
-    if (reviewChannel.type !== ChannelType.GuildText) {
+    const reviewChannel = await interaction.guild.channels.fetch(config.REVIEW_CHANNEL)
+    if (!reviewChannel || reviewChannel.type !== ChannelType.GuildText) {
         throw new MessageError("Review channel is not a text channel.")
     }
     await (await reviewChannel.messages.fetch(application.reviewMessageId.toString())).delete()
@@ -172,7 +175,7 @@ const approveLogic = async ({
     // Update the interaction's message
     interaction.editReply({
         embeds: [
-            new EmbedBuilder(interaction.message.embeds[0]).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
+            new EmbedBuilder(interaction.message.embeds[0] as APIEmbed).setDescription(interaction.message.embeds[0].description + "\n\n" + "The user has been approved.").setColor(embedGreen)
         ],
         components: [new ActionRowBuilder<ButtonBuilder>().setComponents(interaction.message.components[0].components?.map(receivedComponent => {
             if (receivedComponent.type === ComponentType.Button) {
@@ -180,7 +183,7 @@ const approveLogic = async ({
                 component.setDisabled(true)
                 return component
             }
-        }))]
+        }).filter((item) => item !== undefined) as ButtonBuilder[] || [])]
     })
 
 

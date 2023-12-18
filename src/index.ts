@@ -2,16 +2,84 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction, Events, Partials } from 'discord.js';
-import { token } from './config.json';
+
 import { ApplicationCommand, Button, Modal } from './types';
 import { PrismaClient } from '@prisma/client';
 import { MessageError } from './errors';
 import { embedBlue, embedRed } from './const';
 import { onLeave } from './events/leave';
+import envSchema, { JSONSchemaType } from 'env-schema';
 
 export const prisma = new PrismaClient()
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers], partials: [Partials.GuildMember] });
+
+
+// use env-schema to validate process.env
+
+interface Env {
+	CLIENT_ID: string;
+	GUILD_ID: string;
+	TOKEN: string;
+	REVIEW_CHANNEL: string;
+	FOLLOWUP_CHANNEL: string;
+	RAISE_CHANNEL: string;
+	APPROVE_LOG_CHANNEL: string;
+	RAISE_ROLE: string;
+	REVIEWER_ROLE: string;
+	FOLLOWUP_PING_ROLE: string;
+	ADD_ROLE: string;
+	REMOVE_ROLE: string;
+	SUCCESS_CHANNEL_ID: string;
+	SUCCESS_MESSAGE: string;
+
+}
+const schema: JSONSchemaType<Env> = {
+	type: 'object',
+	// all required
+	required: [
+		'CLIENT_ID',
+		'GUILD_ID',
+		'TOKEN',
+		'REVIEW_CHANNEL',
+		'FOLLOWUP_CHANNEL',
+		'RAISE_CHANNEL',
+		'APPROVE_LOG_CHANNEL',
+		'RAISE_ROLE',
+		'REVIEWER_ROLE',
+		'FOLLOWUP_PING_ROLE',
+		'ADD_ROLE',
+		'REMOVE_ROLE',
+		'SUCCESS_CHANNEL_ID',
+		'SUCCESS_MESSAGE'
+	],
+	properties: {
+		CLIENT_ID: { type: 'string', },
+		GUILD_ID: { type: 'string', },
+		TOKEN: { type: 'string', },
+		REVIEW_CHANNEL: { type: 'string', },
+		FOLLOWUP_CHANNEL: { type: 'string', },
+		RAISE_CHANNEL: { type: 'string', },
+		APPROVE_LOG_CHANNEL: { type: 'string', },
+		RAISE_ROLE: { type: 'string', },
+		REVIEWER_ROLE: { type: 'string', },
+		FOLLOWUP_PING_ROLE: { type: 'string', },
+		ADD_ROLE: { type: 'string', },
+		REMOVE_ROLE: { type: 'string', },
+		SUCCESS_CHANNEL_ID: { type: 'string', },
+		SUCCESS_MESSAGE: { type: 'string', },
+	}
+}
+
+const config = envSchema({
+	schema: schema,
+	dotenv: true // load .env if it is there, default: false
+	// or you can pass DotenvConfigOptions
+	// dotenv: {
+	//   path: '/custom/path/to/.env'
+	// }
+})
+
 
 const commands: Collection<string, ApplicationCommand> = new Collection();
 const buttons: Collection<string, Button> = new Collection();
@@ -184,5 +252,9 @@ client.on(Events.GuildMemberRemove, async (event) => {
 	await onLeave(event)
 })
 
+
 // Login to Discord with your client's token
-client.login(token);
+client.login(config.TOKEN);
+
+
+export { config }

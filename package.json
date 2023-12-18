@@ -6,6 +6,7 @@
   "dependencies": {
     "@prisma/client": "^5.7.0",
     "discord.js": "^14.14.1",
+    "env-schema": "^5.2.1",
     "typescript": "^5.2.2"
   },
   "packageManager": "yarn@3.2.1",
@@ -22,6 +23,8 @@
     "start:deploy": "node dist/deploy-commands.js",
     "go": "yarn build && yarn start",
     "dev": "tsc-watch --noClear --onSuccess \"node ./dist/index.js\"",
-    "lint": "eslint src/**/*.ts src/**/*.json"
+    "lint": "eslint src/**/*.ts src/**/*.json",
+    "migrate": "prisma migrate deploy",
+    "generate": "prisma generate"
   }
 }
