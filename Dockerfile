@@ -3,6 +3,8 @@ FROM node:20-buster
 # Create app directory
 WORKDIR /usr/src/app
 
+ARG SENTRY_AUTH_TOKEN 
+
 # Install app dependencies
 COPY package*.json ./
 COPY yarn.lock ./
