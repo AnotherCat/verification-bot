@@ -3,7 +3,7 @@ version: "3.8"
 services:
 
   api: 
-    image: ghcr.io/AnotherCat/verification-bot:1
+    image: ghcr.io/anothercat/verification-bot:1
     restart: always
     env_file:
       - .env
