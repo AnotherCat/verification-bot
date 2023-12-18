@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import fs from 'node:fs';
 import path from 'node:path';
+import * as Sentry from "@sentry/node";
+import { ProfilingIntegration } from "@sentry/profiling-node";
 import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction, Events, Partials } from 'discord.js';
 
 import { ApplicationCommand, Button, Modal } from './types';
@@ -10,12 +12,7 @@ import { embedBlue, embedRed } from './const';
 import { onLeave } from './events/leave';
 import envSchema, { JSONSchemaType } from 'env-schema';
 
-export const prisma = new PrismaClient()
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers], partials: [Partials.GuildMember] });
-
-
-// use env-schema to validate process.env
 
 interface Env {
 	CLIENT_ID: string;
@@ -32,6 +29,7 @@ interface Env {
 	REMOVE_ROLE: string;
 	SUCCESS_CHANNEL_ID: string;
 	SUCCESS_MESSAGE: string;
+	SENTRY_DSN: string;
 
 }
 const schema: JSONSchemaType<Env> = {
@@ -51,7 +49,8 @@ const schema: JSONSchemaType<Env> = {
 		'ADD_ROLE',
 		'REMOVE_ROLE',
 		'SUCCESS_CHANNEL_ID',
-		'SUCCESS_MESSAGE'
+		'SUCCESS_MESSAGE',
+		"SENTRY_DSN"
 	],
 	properties: {
 		CLIENT_ID: { type: 'string', },
@@ -68,6 +67,7 @@ const schema: JSONSchemaType<Env> = {
 		REMOVE_ROLE: { type: 'string', },
 		SUCCESS_CHANNEL_ID: { type: 'string', },
 		SUCCESS_MESSAGE: { type: 'string', },
+		SENTRY_DSN: { type: 'string' }
 	}
 }
 
@@ -79,6 +79,28 @@ const config = envSchema({
 	//   path: '/custom/path/to/.env'
 	// }
 })
+
+export const prisma = new PrismaClient()
+
+Sentry.init({
+	dsn: config.SENTRY_DSN,
+	integrations: [
+		new ProfilingIntegration(),
+		new Sentry.Integrations.Prisma({ client: prisma })
+	],
+	// Performance Monitoring
+	tracesSampleRate: 1.0, //  Capture 100% of the transactions
+	// Set sampling rate for profiling - this is relative to tracesSampleRate
+	profilesSampleRate: 1.0,
+});
+
+
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers], partials: [Partials.GuildMember] });
+
+
+// use env-schema to validate process.env
+
 
 
 const commands: Collection<string, ApplicationCommand> = new Collection();

@@ -5,6 +5,9 @@
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^5.7.0",
+    "@sentry/cli": "^2.23.0",
+    "@sentry/node": "^7.88.0",
+    "@sentry/profiling-node": "^1.3.2",
     "discord.js": "^14.14.1",
     "env-schema": "^5.2.1",
     "typescript": "^5.2.2"
@@ -18,13 +21,14 @@
     "tsc-watch": "^6.0.4"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && yarn sentry:sourcemaps",
     "start": "node .",
     "start:deploy": "node dist/deploy-commands.js",
     "go": "yarn build && yarn start",
     "dev": "tsc-watch --noClear --onSuccess \"node ./dist/index.js\"",
     "lint": "eslint src/**/*.ts src/**/*.json",
     "migrate": "prisma migrate deploy",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org student-sam --project verification-bot ./dist && sentry-cli sourcemaps upload --org student-sam --project verification-bot ./dist"
   }
 }

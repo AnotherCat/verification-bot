@@ -6,3 +6,5 @@ dist
 
 .yarn/cache
 .yarn/install-state.gz
+# Sentry Config File
+.sentryclirc
