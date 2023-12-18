@@ -34,7 +34,7 @@ async function sharedLogic(interaction: ButtonInteraction): Promise<{
         where: {
             userId: application.userId,
             status: {
-                in: ["APPROVED", "DENIED"]
+                in: ["APPROVED", "DENIED", "BANNED", "LAPSED"]
             }
         }
     })
@@ -57,7 +57,7 @@ async function sharedLogic(interaction: ButtonInteraction): Promise<{
             where: {
                 userId: application.userId,
                 status: {
-                    in: ["APPROVED", "DENIED"]
+                    in: ["APPROVED", "DENIED", "BANNED", "LAPSED"]
                 }
             }, orderBy: { timestamp: "desc" }, skip: targetIndex
         })

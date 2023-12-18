@@ -33,5 +33,7 @@ enum VerificationStatus {
   RAISED // Escalated to another level 
   FOLLOWUP // Waiting for followup
   APPROVED // Application approved 
+  BANNED // User denied (banned)
   DENIED // Application denied 
+  LAPSED // Application lapsed (user left server)
 }

@@ -51,7 +51,7 @@ const modal: Modal = {
             where: {
                 userId: BigInt(userId),
                 status: {
-                    in: ["APPROVED", "DENIED"],
+                    in: ["APPROVED", "DENIED", "BANNED", "LAPSED"]
                 },
             },
             orderBy: { timestamp: "asc" }, // So that zero is the most recent

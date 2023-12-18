@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction } from 'discord.js';
+import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction, Events, Partials } from 'discord.js';
 import { token } from './config.json';
 import { ApplicationCommand, Button, Modal } from './types';
 import { PrismaClient } from '@prisma/client';
 import { MessageError } from './errors';
 import { embedBlue, embedRed } from './const';
+import { onLeave } from './events/leave';
 
 export const prisma = new PrismaClient()
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers], partials: [Partials.GuildMember] });
 
 const commands: Collection<string, ApplicationCommand> = new Collection();
 const buttons: Collection<string, Button> = new Collection();
@@ -177,6 +178,11 @@ client.on('interactionCreate', async (interaction) => {
 		}
 	}
 });
+
+
+client.on(Events.GuildMemberRemove, async (event) => {
+	await onLeave(event)
+})
 
 // Login to Discord with your client's token
 client.login(token);
