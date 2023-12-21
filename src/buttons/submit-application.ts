@@ -1,17 +1,14 @@
-import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } from "discord.js";
 import { prisma } from "..";
 import { embedBlue } from "../const";
 import { MessageError } from "../errors";
 import { Button } from "../types";
 
 
-const button: Button = {
+const button: Button<true> = {
 	customIdLabel: 'submit-application',
-	async execute(interaction: ButtonInteraction) {
-
-		if (!interaction.guild || !interaction.member) {
-			throw new Error("This command can only be used in a server.");
-		}
+	settingsRequired: true,
+	async execute(interaction) {
 		// Check if the current user has a pending or raised application 
 		const application = await prisma.verificationSubmission.findFirst({
 			where: {

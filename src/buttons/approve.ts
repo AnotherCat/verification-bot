@@ -1,17 +1,18 @@
-import { ButtonInteraction, } from "discord.js";
-import { Button } from "../types";
+
+import { Button, } from "../types";
 import approveLogic from "./shared-approve";
 import { checkReviewerRole } from "../helpers/permissions";
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: 'approve',
-    async execute(interaction: ButtonInteraction) {
+    settingsRequired: true,
+    async execute(interaction, settings) {
 
 
-        await checkReviewerRole(interaction)
+        await checkReviewerRole(interaction, settings)
         await interaction.deferUpdate()
-        await approveLogic({ interaction })
+        await approveLogic({ interaction, settings })
 
 
 

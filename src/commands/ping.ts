@@ -1,7 +1,8 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { ApplicationCommand } from '../types';
 
-const command: ApplicationCommand = {
+const command: ApplicationCommand<false> = {
+	settingsRequired: false,
 	data: new SlashCommandBuilder()
 		.setName('ping')
 		.setDescription('Replies with Pong!'),
@@ -9,5 +10,7 @@ const command: ApplicationCommand = {
 		await interaction.reply('Pong!');
 	},
 }
+
+
 
 module.exports = command

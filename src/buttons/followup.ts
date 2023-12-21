@@ -3,10 +3,11 @@ import { Button } from "../types";
 import followupLogic from "./shared-followup";
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: 'followup',
-    async execute(interaction) {
-        await checkReviewerRole(interaction)
+    settingsRequired: true,
+    async execute(interaction, settings) {
+        await checkReviewerRole(interaction, settings)
         await followupLogic(interaction)
     }
 };

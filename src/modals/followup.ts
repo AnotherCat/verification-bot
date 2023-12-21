@@ -7,25 +7,26 @@ import {
     ChannelType,
     ComponentType,
     BaseMessageOptions,
-    ModalSubmitInteraction,
+
     PermissionFlagsBits,
     ThreadAutoArchiveDuration,
     ThreadChannel,
     EmbedBuilder,
 } from "discord.js";
-import { config, prisma } from "..";
+import { prisma } from "..";
 import { MessageError } from "../errors";
 
 import { Modal } from "../types";
 
-const modal: Modal = {
+const modal: Modal<true> = {
     customIdLabel: "followup",
-    async execute(interaction: ModalSubmitInteraction) {
+    settingsRequired: true,
+    async execute(interaction, settings) {
         // defer update
         await interaction.deferUpdate();
 
-        if (!interaction.guild || !interaction.member || !interaction.message) {
-            throw new Error("This command can only be used in a server.");
+        if (!interaction.isFromMessage()) {
+            throw new MessageError("Modal submit should have been from a message. This is an unexpected error!");
         }
 
         // get applicationId from customId
@@ -71,7 +72,7 @@ const modal: Modal = {
 
         const followupInitialContent: BaseMessageOptions = {
             content: `<@${userId}> a greeter wishes to clarify some details about your application - <@${interaction.user.id
-                }>. <@&${config.FOLLOWUP_PING_ROLE}>`
+                }>. ${settings.followUpPingRoleIds.map((roleId) => `<@&${roleId}>`).join(" ")}`,
         };
         let followupInitialContentSecondMessage: BaseMessageOptions | undefined =
             undefined;
@@ -107,7 +108,7 @@ const modal: Modal = {
         // get the followup channel
 
         const followupChannel = await interaction.guild.channels.fetch(
-            config.FOLLOWUP_CHANNEL
+            settings.followUpChannelId
         );
 
         if (!followupChannel || followupChannel.type !== ChannelType.GuildText) {

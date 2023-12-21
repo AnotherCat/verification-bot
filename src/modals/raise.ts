@@ -5,19 +5,19 @@ import {
     ButtonStyle,
     ChannelType,
     EmbedBuilder,
-    ModalSubmitInteraction,
     PermissionFlagsBits,
     ThreadAutoArchiveDuration,
 } from "discord.js";
-import { config, prisma } from "..";
+import { prisma } from "..";
 import { embedRed } from "../const";
 import { MessageError } from "../errors";
 
 import { ApplicationData, Modal } from "../types";
 
-const modal: Modal = {
+const modal: Modal<true> = {
     customIdLabel: "raise",
-    async execute(interaction: ModalSubmitInteraction) {
+    settingsRequired: true,
+    async execute(interaction, settings) {
         // defer update
         await interaction.deferUpdate();
 
@@ -69,7 +69,7 @@ const modal: Modal = {
             "reason"
         )
             ;
-        const raiseChannel = await interaction.guild.channels.fetch(config.RAISE_CHANNEL);
+        const raiseChannel = await interaction.guild.channels.fetch(settings.raiseChannelId);
 
         if (!raiseChannel || raiseChannel.type !== ChannelType.GuildText) {
             throw new MessageError("Raise channel is not a text channel.");
@@ -93,7 +93,7 @@ const modal: Modal = {
         } else {
             followUpMention = `\n\nA followup has been opened in: <#${application.followUpChannelId}>`
 
-            const followUpParentChannel = await interaction.guild.channels.fetch(config.FOLLOWUP_CHANNEL)
+            const followUpParentChannel = await interaction.guild.channels.fetch(settings.followUpChannelId)
             if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
                 const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
                 if (thread) {
@@ -125,7 +125,7 @@ const modal: Modal = {
         const thread = await raiseChannel.threads.create({ name: `Report of ${member.user.username}`, reason: "Raise report", autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek });
         // send message pinging
         const threadMessage = await thread.send({
-            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${config.RAISE_ROLE}> with the reason ${reason}`, embeds: [new EmbedBuilder({
+            content: `<@${interaction.member.user.id}> raised an application by <@${member.user.id}>. <@&${settings.raiseRoleId}> with the reason ${reason}`, embeds: [new EmbedBuilder({
                 title: `Reviewing ${member.user.username}'s application - raised by ${interaction.member.user.username}`,
                 description: `Original Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
                     `\n\n**Age**: ${applicationData.age}`

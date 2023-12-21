@@ -1,4 +1,4 @@
-import { ButtonInteraction, ActionRowBuilder, ModalBuilder, ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ModalBuilder, ModalActionRowComponentBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { prisma } from "..";
 import { MessageError } from "../errors";
 import { Button } from "../types";
@@ -6,10 +6,11 @@ import { checkReviewerRole } from "../helpers/permissions";
 
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: 'raise',
-    async execute(interaction: ButtonInteraction) {
-        await checkReviewerRole(interaction)
+    settingsRequired: true,
+    async execute(interaction, settings) {
+        await checkReviewerRole(interaction, settings)
         // First get the applicationId from the customId
         const applicationReference = interaction.customId.split(":")[1]
 
@@ -44,11 +45,6 @@ const button: Button = {
         )
 
         await interaction.showModal(modal)
-
-
-
-
-
 
     },
 };

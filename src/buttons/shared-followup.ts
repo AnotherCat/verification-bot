@@ -3,11 +3,9 @@ import { prisma } from ".."
 import { MessageError } from "../errors"
 
 const followupLogic = async (
-    interaction: ButtonInteraction,
+    interaction: ButtonInteraction<"cached">,
+
 ) => {
-    if (!interaction.guild || !interaction.member) {
-        throw new Error("This command can only be used in a server.");
-    }
 
     // First get the applicationId from the customId
     const applicationReference = interaction.customId.split(":")[1]
@@ -32,10 +30,7 @@ const followupLogic = async (
 
     const userId = application.userId.toString()
 
-
-
-
-
+    // TODO: Is this really needed??
     const member = await interaction.guild.members.fetch(userId)
 
     // Throw if member is not in the guild

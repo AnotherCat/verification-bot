@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/node";
 import { ProfilingIntegration } from "@sentry/profiling-node";
 import { Client, Collection, CommandInteraction, GatewayIntentBits, MessageComponentInteraction, EmbedBuilder, ModalSubmitInteraction, Events, Partials } from 'discord.js';
 
-import { ApplicationCommand, Button, Modal } from './types';
+import { ApplicationCommand, Button, GuildSettingsParsed, Modal, getGuildSettings, isSettingsRequired } from './types';
 import { PrismaClient } from '@prisma/client';
 import { MessageError } from './errors';
 import { embedBlue, embedRed } from './const';
@@ -18,17 +18,6 @@ interface Env {
 	CLIENT_ID: string;
 	GUILD_ID: string;
 	TOKEN: string;
-	REVIEW_CHANNEL: string;
-	FOLLOWUP_CHANNEL: string;
-	RAISE_CHANNEL: string;
-	APPROVE_LOG_CHANNEL: string;
-	RAISE_ROLE: string;
-	REVIEWER_ROLE: string;
-	FOLLOWUP_PING_ROLE: string;
-	ADD_ROLE: string;
-	REMOVE_ROLE: string;
-	SUCCESS_CHANNEL_ID: string;
-	SUCCESS_MESSAGE: string;
 	SENTRY_DSN: string;
 
 }
@@ -39,34 +28,12 @@ const schema: JSONSchemaType<Env> = {
 		'CLIENT_ID',
 		'GUILD_ID',
 		'TOKEN',
-		'REVIEW_CHANNEL',
-		'FOLLOWUP_CHANNEL',
-		'RAISE_CHANNEL',
-		'APPROVE_LOG_CHANNEL',
-		'RAISE_ROLE',
-		'REVIEWER_ROLE',
-		'FOLLOWUP_PING_ROLE',
-		'ADD_ROLE',
-		'REMOVE_ROLE',
-		'SUCCESS_CHANNEL_ID',
-		'SUCCESS_MESSAGE',
 		"SENTRY_DSN"
 	],
 	properties: {
 		CLIENT_ID: { type: 'string', },
 		GUILD_ID: { type: 'string', },
 		TOKEN: { type: 'string', },
-		REVIEW_CHANNEL: { type: 'string', },
-		FOLLOWUP_CHANNEL: { type: 'string', },
-		RAISE_CHANNEL: { type: 'string', },
-		APPROVE_LOG_CHANNEL: { type: 'string', },
-		RAISE_ROLE: { type: 'string', },
-		REVIEWER_ROLE: { type: 'string', },
-		FOLLOWUP_PING_ROLE: { type: 'string', },
-		ADD_ROLE: { type: 'string', },
-		REMOVE_ROLE: { type: 'string', },
-		SUCCESS_CHANNEL_ID: { type: 'string', },
-		SUCCESS_MESSAGE: { type: 'string', },
 		SENTRY_DSN: { type: 'string' }
 	}
 }
@@ -215,10 +182,13 @@ client.on("raw", async (event) => {
 })
 
 client.on('interactionCreate', async (interaction) => {
-
+	if (!interaction.inCachedGuild()) {
+		throw new Error("Interaction is not in a guild")
+	}
 	if (interaction.isCommand()) {
 
 		const command = commands.get(interaction.commandName);
+
 
 		if (!command) {
 			await interaction.reply({
@@ -228,8 +198,22 @@ client.on('interactionCreate', async (interaction) => {
 			return
 		}
 
+		let settings: GuildSettingsParsed | undefined
+
+		if (isSettingsRequired(command)) {
+			const context = await getGuildSettings(interaction.guild.id)
+			if (!context.success) {
+				await interaction.reply({
+					content: "Guild settings are not fully set, this is required for this action! Please contact your server administrator to resolve this issue.",
+					ephemeral: true
+				})
+				return
+			}
+			settings = context.data
+		}
+
 		try {
-			await command.execute(interaction);
+			await command.execute(interaction, settings);
 		}
 		catch (error) {
 			await handleInteractionError(interaction, error)
@@ -244,8 +228,21 @@ client.on('interactionCreate', async (interaction) => {
 			})
 			return
 		}
+		let settings: GuildSettingsParsed | undefined
+
+		if (isSettingsRequired(button)) {
+			const context = await getGuildSettings(interaction.guild.id)
+			if (!context.success) {
+				await interaction.reply({
+					content: "Guild settings are not fully set, this is required for this action! Please contact your server administrator to resolve this issue.",
+					ephemeral: true
+				})
+				return
+			}
+			settings = context.data
+		}
 		try {
-			await button.execute(interaction);
+			await button.execute(interaction, settings);
 		}
 		catch (error) {
 			await handleInteractionError(interaction, error)
@@ -260,8 +257,21 @@ client.on('interactionCreate', async (interaction) => {
 			})
 			return
 		}
+		let settings: GuildSettingsParsed | undefined
+
+		if (isSettingsRequired(modal)) {
+			const context = await getGuildSettings(interaction.guild.id)
+			if (!context.success) {
+				await interaction.reply({
+					content: "Guild settings are not fully set, this is required for this action! Please contact your server administrator to resolve this issue.",
+					ephemeral: true
+				})
+				return
+			}
+			settings = context.data
+		}
 		try {
-			await modal.execute(interaction);
+			await modal.execute(interaction, settings);
 		}
 		catch (error) {
 			await handleInteractionError(interaction, error)
@@ -271,7 +281,11 @@ client.on('interactionCreate', async (interaction) => {
 
 
 client.on(Events.GuildMemberRemove, async (event) => {
-	await onLeave(event)
+	const settings = await getGuildSettings(event.guild.id)
+	if (!settings.success) {
+		return
+	}
+	await onLeave(event, settings.data)
 })
 
 

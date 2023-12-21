@@ -1,17 +1,13 @@
-import { ButtonInteraction, ActionRowBuilder, ModalBuilder, TextInputBuilder, ModalActionRowComponentBuilder, TextInputStyle } from "discord.js";
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, ModalActionRowComponentBuilder, TextInputStyle } from "discord.js";
 import { prisma } from "..";
 import { MessageError } from "../errors";
 import { Button } from "../types";
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: 'submit-application-confirm',
-    async execute(interaction: ButtonInteraction) {
-
-        if (!interaction.guild || !interaction.member) {
-            throw new Error("This command can only be used in a server.");
-        }
-
+    settingsRequired: true,
+    async execute(interaction) {
         // Check if the current user has a pending or raised application 
         const application = await prisma.verificationSubmission.findFirst({
             where: {
@@ -22,11 +18,7 @@ const button: Button = {
         if (application && (application.status === "PENDING" || application.status === "RAISED" || application.status === "FOLLOWUP")) {
             throw new MessageError("You already have a pending application, please wait for that to be reviewed.")
         }
-
-
         // Reply with a verification application modal
-
-
 
         const modal = new ModalBuilder()
             .setCustomId("submit-application")

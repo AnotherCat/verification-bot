@@ -3,14 +3,14 @@ import { checkReviewerRole } from "../helpers/permissions";
 import { prisma } from "..";
 import { MessageError } from "../errors";
 import { Prisma } from "@prisma/client"
-import { ApplicationData } from "../types";
+import { ApplicationData, GuildSettingsParsed } from "../types";
 import { embedGreen } from "../const";
 
-async function sharedLogic(interaction: ButtonInteraction): Promise<{
+async function sharedLogic(interaction: ButtonInteraction<"cached">, settings: GuildSettingsParsed): Promise<{
     embeds: EmbedBuilder[],
     components: ActionRowBuilder<ButtonBuilder>[]
 }> {
-    await checkReviewerRole(interaction)
+    await checkReviewerRole(interaction, settings)
     const applicationReference = interaction.customId.split(":")[1]
     const targetIndex = parseInt(interaction.customId.split(":")[2])
 

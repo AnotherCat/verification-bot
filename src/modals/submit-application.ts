@@ -1,15 +1,16 @@
 import { Prisma, VerificationSubmission } from "@prisma/client";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalSubmitInteraction } from "discord.js";
-import { config, prisma } from "..";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
+import { prisma } from "..";
 import { embedBlue, embedGreen } from "../const";
 import { MessageError } from "../errors";
 import { ApplicationData, Modal } from "../types";
 import crypto from "crypto";
 
 
-const modal: Modal = {
+const modal: Modal<true> = {
     customIdLabel: 'submit-application',
-    async execute(interaction: ModalSubmitInteraction) {
+    settingsRequired: true,
+    async execute(interaction, settings) {
 
         // Reply with an ephemeral defer
         // Then send the application to the review channel
@@ -17,9 +18,6 @@ const modal: Modal = {
         // Then update the interaction reply with a confirmation for the user
         await interaction.deferUpdate()
 
-        if (!interaction.guild || !interaction.member) {
-            throw new Error("This command can only be used in a server.");
-        }
 
         // Check if the current user has a pending or raised application 
         const pastApplications = await prisma.verificationSubmission.findMany({
@@ -44,7 +42,7 @@ const modal: Modal = {
         const applicationReference = crypto.randomUUID()
 
         // send application to review channel
-        const reviewChannel = interaction.guild.channels.cache.get(config.REVIEW_CHANNEL);
+        const reviewChannel = interaction.guild.channels.cache.get(settings.reviewChannelId);
         if (!reviewChannel || !reviewChannel.isTextBased()) {
             throw new Error("Could not find the review channel! This is not an expected error, please contact a server mod.");
         }

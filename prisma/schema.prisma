@@ -7,9 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model GuildSettings {
+  guildId                 BigInt   @id @unique
+  guild                   Guild    @relation(fields: [guildId], references: [id])
+  promptChannelId         BigInt?
+  promptMessageContent    String?
+  promptMessageId         BigInt?
+  reviewChannelId         BigInt?
+  followUpChannelId       BigInt?
+  raiseChannelId          BigInt?
+  logChannelId            BigInt?
+  raiseRoleId             BigInt?
+  reviewerRoleId          BigInt?
+  followUpPingRoleIds     String[]
+  addRoleId               BigInt?
+  removeRoleId            BigInt?
+  successMessageChannelId BigInt?
+  successMessageContent   String?
+}
+
 model Guild {
   id                      BigInt                   @unique
   verificationSubmissions VerificationSubmission[]
+  reviewChannelId         BigInt?
+  guildSettings           GuildSettings?
 }
 
 model VerificationSubmission {

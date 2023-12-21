@@ -1,26 +1,20 @@
-import { ButtonInteraction, GuildMemberRoleManager, } from "discord.js";
-
 import { MessageError } from "../errors";
-import { Button } from "../types";
+import { Button, } from "../types";
 import approveLogic from "./shared-approve";
-import { config } from "..";
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: 'raise-approve',
-    async execute(interaction: ButtonInteraction) {
-
-        if (!interaction.guild || !interaction.member) {
-            throw new Error("This command can only be used in a server.");
-        }
+    settingsRequired: true,
+    async execute(interaction, settings) {
 
         await interaction.deferUpdate()
         // First check if the interaction member has the required role
-        if (!((interaction.member.roles instanceof GuildMemberRoleManager && interaction.member.roles.cache.has(config.RAISE_ROLE)) || (!(interaction.member.roles instanceof GuildMemberRoleManager) && (interaction.member.roles.indexOf(config.RAISE_ROLE) > -1)))) {
+        if (!interaction.member.roles.cache.has(settings.raiseRoleId)) {
             throw new MessageError("You do not have the required role to take action on an application that has been raised.")
         }
 
-        await approveLogic({ interaction })
+        await approveLogic({ interaction, settings })
 
     },
 };

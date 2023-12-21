@@ -1,6 +1,6 @@
 import { APIEmbed, ActionRowBuilder, AuditLogEvent, ButtonBuilder, ButtonStyle, ChannelType, ComponentType, EmbedBuilder, Guild, GuildMember, PartialGuildMember, PermissionFlagsBits, SnowflakeUtil, ThreadChannel, User } from "discord.js";
-import { config, prisma } from "..";
-import { ApplicationData } from "../types";
+import { prisma } from "..";
+import { ApplicationData, GuildSettingsParsed } from "../types";
 
 import { MessageError } from "../errors";
 import { embedOrange, embedRed, embedYellow } from "../const";
@@ -11,9 +11,9 @@ import { VerificationSubmission } from "@prisma/client";
 
 type LeaveType = "ban" | "kick" | "leave";
 
-export async function onLeave(member: GuildMember | PartialGuildMember) {
+export async function onLeave(member: GuildMember | PartialGuildMember, settings: GuildSettingsParsed) {
 
-    console.log("SOMEONE LEFT")
+
     // fetch audit logs to see if leave, kick or ban (after is a snowflake)
     const fetchedLogs = await member.guild.fetchAuditLogs({
         limit: 40,
@@ -24,7 +24,6 @@ export async function onLeave(member: GuildMember | PartialGuildMember) {
     // loop through and use the first kick or ban
     let type: LeaveType = "leave"
     let reason = ""
-    console.log(logs)
     for (const log of logs.values()) {
         if (log.action === AuditLogEvent.MemberBanAdd) {
             type = "ban"
@@ -53,17 +52,17 @@ export async function onLeave(member: GuildMember | PartialGuildMember) {
         },
     })
     for (const application of applications) {
-        await closeApplication({ application, type, guild: member.guild, user: member.user, reason })
+        await closeApplication({ application, type, guild: member.guild, user: member.user, reason, settings })
     }
 
 }
 
 
-async function closeApplication({ application, guild, reason, type, user }: { application: VerificationSubmission, guild: Guild, user: User, type: LeaveType, reason: string }) {
+async function closeApplication({ application, guild, reason, type, user, settings }: { application: VerificationSubmission, guild: Guild, user: User, type: LeaveType, reason: string, settings: GuildSettingsParsed }) {
     // red: ban, orange: kick, yellow: leave
     const embedColor = type === "ban" ? embedRed : type === "kick" ? embedOrange : embedYellow;
     const applicationData = application.data as unknown as ApplicationData
-    const logChannel = await guild.channels.fetch(config.APPROVE_LOG_CHANNEL)
+    const logChannel = await guild.channels.fetch(settings.logChannelId)
 
     if (!guild.members.me) {
         throw new Error("Bot is not in guild.")
@@ -85,7 +84,6 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
             + (reason ? `\n\n**${type.charAt(0).toUpperCase() + type.slice(1)} Reason**: ${reason}` : ""),
         color: embedColor
     })
-    console.log(logEmbed);
     const logActionRow = new ActionRowBuilder<ButtonBuilder>()
 
     // Update the status to denied
@@ -101,7 +99,7 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
 
     let followupThread: ThreadChannel | undefined
     if (application.followUpChannelId) {
-        const followUpParentChannel = await guild.channels.fetch(config.FOLLOWUP_CHANNEL)
+        const followUpParentChannel = await guild.channels.fetch(settings.followUpChannelId)
         if (followUpParentChannel && followUpParentChannel.type === ChannelType.GuildText) {
             const thread = await followUpParentChannel.threads.fetch(application.followUpChannelId.toString(),)
             if (thread) {
@@ -113,7 +111,7 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
 
     let raiseThread: ThreadChannel | undefined
     if (application.raiseThreadId) {
-        const raiseParentChannel = await guild.channels.fetch(config.RAISE_CHANNEL)
+        const raiseParentChannel = await guild.channels.fetch(settings.raiseChannelId)
         if (raiseParentChannel && raiseParentChannel.type === ChannelType.GuildText) {
             const thread = await raiseParentChannel.threads.fetch(application.raiseThreadId.toString(),)
             if (thread) {
@@ -175,7 +173,7 @@ async function closeApplication({ application, guild, reason, type, user }: { ap
     }
 
     // Remove the application message
-    const reviewChannel = await guild.channels.fetch(config.REVIEW_CHANNEL)
+    const reviewChannel = await guild.channels.fetch(settings.reviewChannelId)
     if (!reviewChannel || reviewChannel.type !== ChannelType.GuildText) {
         throw new MessageError("Review channel is not a text channel.")
     }

@@ -1,12 +1,12 @@
 import { Button } from "../types"
-import { ButtonInteraction } from "discord.js"
 import sharedButtonLogic from "./shared-past"
 
 
-const button: Button = {
+const button: Button<true> = {
     customIdLabel: "past",
-    async execute(interaction: ButtonInteraction) {
-        const data = await sharedButtonLogic(interaction)
+    settingsRequired: true,
+    async execute(interaction, settings) {
+        const data = await sharedButtonLogic(interaction, settings)
         await interaction.update(data)
     }
 
