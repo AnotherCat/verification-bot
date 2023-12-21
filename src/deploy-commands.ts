@@ -27,7 +27,7 @@ async function allTheStuff() {
 	const rest = new REST({ version: '10' }).setToken(config.TOKEN);
 
 	rest
-		.put(Routes.applicationGuildCommands(config.CLIENT_ID, config.GUILD_ID), { body: commands })
+		.put(Routes.applicationCommands(config.CLIENT_ID), { body: commands })
 		.then(() => console.log('Successfully registered application commands.'))
 		.catch(console.error);
 
