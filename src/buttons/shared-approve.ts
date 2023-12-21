@@ -1,4 +1,4 @@
-import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ThreadChannel, PermissionFlagsBits, ChannelType, ButtonStyle, ComponentType, APIEmbed, GuildMember } from "discord.js"
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, EmbedBuilder, ThreadChannel, PermissionFlagsBits, ChannelType, ButtonStyle, ComponentType, APIEmbed, GuildMember, MessageFlags } from "discord.js"
 import { prisma } from ".."
 import { embedGreen } from "../const"
 import { MessageError } from "../errors"
@@ -101,7 +101,10 @@ const approveLogic = async ({
     const channel = await interaction.guild.channels.fetch(settings.successMessageChannelId)
     // send message
     if (channel && channel.permissionsFor(me).has(PermissionFlagsBits.SendMessages) && channel.isTextBased()) {
-        await channel.send(settings.successMessage.replace("{user}", `<@${userId}>`))
+        await channel.send({
+            content: settings.successMessage.replace("{user}", `<@${userId}>`),
+            flags: MessageFlags.SuppressEmbeds
+        })
     }
 
 
