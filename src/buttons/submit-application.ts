@@ -22,7 +22,7 @@ const button: Button<true> = {
 		// Reply with a confirmation message for the rules
 
 		await interaction.reply({
-			embeds: [new EmbedBuilder({ description: 'Please review the #rules and agree to them before continuing.', color: embedBlue })],
+			embeds: [new EmbedBuilder({ description: 'Please review the <#843489404047589386> and agree to them before continuing.', color: embedBlue })],
 			components: [new ActionRowBuilder<ButtonBuilder>().setComponents(
 				[
 					new ButtonBuilder()
