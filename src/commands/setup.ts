@@ -2,6 +2,7 @@ import { SlashCommandBuilder, } from '@discordjs/builders';
 import { PermissionFlagsBits, ChannelType } from 'discord-api-types/v10';
 import { ApplicationCommand } from '../types';
 import { prisma } from '..';
+import { ActionRowBuilder, ModalBuilder, TextInputBuilder, ModalActionRowComponentBuilder, TextInputStyle } from 'discord.js';
 
 
 const command: ApplicationCommand<false> = {
@@ -60,21 +61,11 @@ const command: ApplicationCommand<false> = {
 				.addChannelTypes(ChannelType.GuildText)
 				.setRequired(false)
 		)
-		.addStringOption((option) =>
-			option.setName('success-message')
-				.setDescription('The message to send to the success channel.')
-				.setRequired(false)
-		)
 		.addChannelOption((option) =>
 			option.setName('prompt-channel')
 				.setDescription('The channel to send the prompt to. - Should be visible to all who need to go through verification.')
 				.addChannelTypes(ChannelType.GuildText)
 				.setRequired(false),
-		)
-		.addStringOption((option) =>
-			option.setName('prompt-message')
-				.setDescription('The message to send to the prompt channel.')
-				.setRequired(false)
 		)
 		.setDMPermission(false)
 		.setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
@@ -99,9 +90,7 @@ const command: ApplicationCommand<false> = {
 			const verifiedRoleId = interaction.options.getRole('verified-role', false)?.id ?? settings?.addRoleId
 			const unverifiedRoleId = interaction.options.getRole('unverified-role', false)?.id ?? settings?.removeRoleId
 			const successChannelId = interaction.options.getChannel('success-channel', false)?.id ?? settings?.successMessageChannelId
-			const successMessage = interaction.options.getString('success-message', false) ?? settings?.successMessageContent
 			const promptChannelId = interaction.options.getChannel('prompt-channel', false)?.id
-			const promptMessage = interaction.options.getString('prompt-message', false)
 
 			// check if the review channel is the same as any other channel
 			/*if (reviewChannelId !== null && (reviewChannelId === followupChannelId || reviewChannelId === raiseChannelId || reviewChannelId === logChannelId || reviewChannelId === successChannelId || reviewChannelId === promptChannelId)) {
@@ -123,9 +112,9 @@ const command: ApplicationCommand<false> = {
 					addRoleId: verifiedRoleId ? BigInt(verifiedRoleId) : undefined,
 					removeRoleId: unverifiedRoleId ? BigInt(unverifiedRoleId) : undefined,
 					successMessageChannelId: successChannelId ? BigInt(successChannelId) : undefined,
-					successMessageContent: successMessage,
+
 					promptChannelId: promptChannelId ? BigInt(promptChannelId) : undefined,
-					promptMessageContent: promptMessage,
+
 					guild: {
 						connectOrCreate: {
 							where: {
@@ -149,17 +138,40 @@ const command: ApplicationCommand<false> = {
 					addRoleId: verifiedRoleId ? BigInt(verifiedRoleId) : undefined,
 					removeRoleId: unverifiedRoleId ? BigInt(unverifiedRoleId) : undefined,
 					successMessageChannelId: successChannelId ? BigInt(successChannelId) : undefined,
-					successMessageContent: successMessage,
+
 					promptChannelId: promptChannelId ? BigInt(promptChannelId) : undefined,
-					promptMessageContent: promptMessage
+
 				}
 			}
 			)
+			const modal = new ModalBuilder()
+				.setCustomId(`setup`)
+				.setTitle("Raise application to moderators")
 
-			await interaction.reply({ content: 'Settings updated!', ephemeral: true })
+			const messageInput = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
+				.setCustomId("success")
+				.setLabel("Success message")
+				.setMaxLength(2000)
+				.setRequired(true)
+				.setStyle(TextInputStyle.Paragraph))
+
+			const promptMessage = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
+				.setCustomId("prompt")
+				.setLabel("Prompt message")
+				.setMaxLength(2000)
+				.setRequired(true)
+				.setStyle(TextInputStyle.Paragraph))
+
+			modal.addComponents(
+				messageInput, promptMessage
+			)
+
+			await interaction.showModal(
+
+				modal
 
 
-
+			)
 		}
 	}
 }

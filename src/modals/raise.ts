@@ -143,7 +143,6 @@ const modal: Modal<true> = {
             ]
         })
 
-
         // update the application to be raised
         await prisma.verificationSubmission.update({
             where: {
@@ -176,17 +175,10 @@ const modal: Modal<true> = {
                 }),
             ]),
         ];
-
-
-
         await interaction.editReply({
             embeds: [embed],
             components: originalMessageComponents,
         });
-
-
-
-
     },
 };
 
