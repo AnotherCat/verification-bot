@@ -104,10 +104,10 @@ const command: ApplicationCommand<false> = {
 			const promptMessage = interaction.options.getString('prompt-message', false)
 
 			// check if the review channel is the same as any other channel
-			if (reviewChannelId !== null && (reviewChannelId === followupChannelId || reviewChannelId === raiseChannelId || reviewChannelId === logChannelId || reviewChannelId === successChannelId || reviewChannelId === promptChannelId)) {
+			/*if (reviewChannelId !== null && (reviewChannelId === followupChannelId || reviewChannelId === raiseChannelId || reviewChannelId === logChannelId || reviewChannelId === successChannelId || reviewChannelId === promptChannelId)) {
 				interaction.reply({ content: 'The review channel cannot be the same as any other channel!!!', ephemeral: true })
 				return
-			}
+			}*/
 			// set the settings
 			await prisma.guildSettings.upsert({
 				where: {
