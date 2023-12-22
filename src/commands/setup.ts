@@ -85,21 +85,26 @@ const command: ApplicationCommand<false> = {
 		// review channel and no other channel can be the same
 		// get the data from the command
 		if (interaction.isChatInputCommand()) {
-			const reviewChannel = interaction.options.getChannel('review-channel', false)
-			const followupChannel = interaction.options.getChannel('followup-channel', false)
-			const raiseChannel = interaction.options.getChannel('raise-channel', false)
-			const logChannel = interaction.options.getChannel('log-channel', false)
-			const reviewerRole = interaction.options.getRole('reviewer-role', false)
-			const raiseRole = interaction.options.getRole('raise-role', false)
-			const verifiedRole = interaction.options.getRole('verified-role', false)
-			const unverifiedRole = interaction.options.getRole('unverified-role', false)
-			const successChannel = interaction.options.getChannel('success-channel', false)
-			const successMessage = interaction.options.getString('success-message', false)
-			const promptChannel = interaction.options.getChannel('prompt-channel', false)
+			const settings = await prisma.guildSettings.findUnique({
+				where: {
+					guildId: BigInt(interaction.guildId)
+				}
+			})
+			const reviewChannelId = interaction.options.getChannel('review-channel', false)?.id ?? settings?.reviewChannelId
+			const followupChannelId = interaction.options.getChannel('followup-channel', false)?.id ?? settings?.followUpChannelId
+			const raiseChannelId = interaction.options.getChannel('raise-channel', false)?.id ?? settings?.raiseChannelId
+			const logChannelId = interaction.options.getChannel('log-channel', false)?.id ?? settings?.logChannelId
+			const reviewerRoleId = interaction.options.getRole('reviewer-role', false)?.id ?? settings?.reviewerRoleId
+			const raiseRoleId = interaction.options.getRole('raise-role', false)?.id ?? settings?.raiseRoleId
+			const verifiedRoleId = interaction.options.getRole('verified-role', false)?.id ?? settings?.addRoleId
+			const unverifiedRoleId = interaction.options.getRole('unverified-role', false)?.id ?? settings?.removeRoleId
+			const successChannelId = interaction.options.getChannel('success-channel', false)?.id ?? settings?.successMessageChannelId
+			const successMessage = interaction.options.getString('success-message', false) ?? settings?.successMessageContent
+			const promptChannelId = interaction.options.getChannel('prompt-channel', false)?.id
 			const promptMessage = interaction.options.getString('prompt-message', false)
 
 			// check if the review channel is the same as any other channel
-			if (reviewChannel === followupChannel || reviewChannel === raiseChannel || reviewChannel === logChannel || reviewChannel === successChannel || reviewChannel === promptChannel) {
+			if (reviewChannelId !== null && (reviewChannelId === followupChannelId || reviewChannelId === raiseChannelId || reviewChannelId === logChannelId || reviewChannelId === successChannelId || reviewChannelId === promptChannelId)) {
 				interaction.reply({ content: 'The review channel cannot be the same as any other channel!!!', ephemeral: true })
 				return
 			}
@@ -109,17 +114,17 @@ const command: ApplicationCommand<false> = {
 					guildId: BigInt(interaction.guildId)
 				},
 				create: {
-					reviewChannelId: reviewChannel?.id ? BigInt(reviewChannel.id) : undefined,
-					followUpChannelId: followupChannel?.id ? BigInt(followupChannel.id) : undefined,
-					raiseChannelId: raiseChannel?.id ? BigInt(raiseChannel.id) : undefined,
-					logChannelId: logChannel?.id ? BigInt(logChannel.id) : undefined,
-					reviewerRoleId: reviewerRole?.id ? BigInt(reviewerRole.id) : undefined,
-					raiseRoleId: raiseRole?.id ? BigInt(raiseRole.id) : undefined,
-					addRoleId: verifiedRole?.id ? BigInt(verifiedRole.id) : undefined,
-					removeRoleId: unverifiedRole?.id ? BigInt(unverifiedRole.id) : undefined,
-					successMessageChannelId: successChannel?.id ? BigInt(successChannel.id) : undefined,
+					reviewChannelId: reviewChannelId ? BigInt(reviewChannelId) : undefined,
+					followUpChannelId: followupChannelId ? BigInt(followupChannelId) : undefined,
+					raiseChannelId: raiseChannelId ? BigInt(raiseChannelId) : undefined,
+					logChannelId: logChannelId ? BigInt(logChannelId) : undefined,
+					reviewerRoleId: reviewerRoleId ? BigInt(reviewerRoleId) : undefined,
+					raiseRoleId: raiseRoleId ? BigInt(raiseRoleId) : undefined,
+					addRoleId: verifiedRoleId ? BigInt(verifiedRoleId) : undefined,
+					removeRoleId: unverifiedRoleId ? BigInt(unverifiedRoleId) : undefined,
+					successMessageChannelId: successChannelId ? BigInt(successChannelId) : undefined,
 					successMessageContent: successMessage,
-					promptChannelId: promptChannel?.id ? BigInt(promptChannel.id) : undefined,
+					promptChannelId: promptChannelId ? BigInt(promptChannelId) : undefined,
 					promptMessageContent: promptMessage,
 					guild: {
 						connectOrCreate: {
@@ -135,17 +140,17 @@ const command: ApplicationCommand<false> = {
 				},
 				update: {
 
-					reviewChannelId: reviewChannel?.id ? BigInt(reviewChannel.id) : undefined,
-					followUpChannelId: followupChannel?.id ? BigInt(followupChannel.id) : undefined,
-					raiseChannelId: raiseChannel?.id ? BigInt(raiseChannel.id) : undefined,
-					logChannelId: logChannel?.id ? BigInt(logChannel.id) : undefined,
-					reviewerRoleId: reviewerRole?.id ? BigInt(reviewerRole.id) : undefined,
-					raiseRoleId: raiseRole?.id ? BigInt(raiseRole.id) : undefined,
-					addRoleId: verifiedRole?.id ? BigInt(verifiedRole.id) : undefined,
-					removeRoleId: unverifiedRole?.id ? BigInt(unverifiedRole.id) : undefined,
-					successMessageChannelId: successChannel?.id ? BigInt(successChannel.id) : undefined,
+					reviewChannelId: reviewChannelId ? BigInt(reviewChannelId) : undefined,
+					followUpChannelId: followupChannelId ? BigInt(followupChannelId) : undefined,
+					raiseChannelId: raiseChannelId ? BigInt(raiseChannelId) : undefined,
+					logChannelId: logChannelId ? BigInt(logChannelId) : undefined,
+					reviewerRoleId: reviewerRoleId ? BigInt(reviewerRoleId) : undefined,
+					raiseRoleId: raiseRoleId ? BigInt(raiseRoleId) : undefined,
+					addRoleId: verifiedRoleId ? BigInt(verifiedRoleId) : undefined,
+					removeRoleId: unverifiedRoleId ? BigInt(unverifiedRoleId) : undefined,
+					successMessageChannelId: successChannelId ? BigInt(successChannelId) : undefined,
 					successMessageContent: successMessage,
-					promptChannelId: promptChannel?.id ? BigInt(promptChannel.id) : undefined,
+					promptChannelId: promptChannelId ? BigInt(promptChannelId) : undefined,
 					promptMessageContent: promptMessage
 				}
 			}
