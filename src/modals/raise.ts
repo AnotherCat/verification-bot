@@ -54,7 +54,7 @@ const modal: Modal<true> = {
                     in: ["APPROVED", "DENIED", "BANNED", "LAPSED"]
                 },
             },
-            orderBy: { timestamp: "asc" }, // So that zero is the most recent
+            orderBy: { creationTimestamp: "asc" }, // So that zero is the most recent
         })
 
         // Get member

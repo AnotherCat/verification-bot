@@ -24,7 +24,7 @@ const modal: Modal<true> = {
             where: {
                 userId: BigInt(interaction.member.user.id),
             },
-            orderBy: { timestamp: "asc" }, // So that zero is the most recent
+            orderBy: { creationTimestamp: "asc" }, // So that zero is the most recent
         })
         const mostRecentApplication = pastApplications[0] as VerificationSubmission | undefined
 
@@ -89,7 +89,7 @@ const modal: Modal<true> = {
                 reference: applicationReference,
                 userId: BigInt(interaction.member.user.id),
                 data: application as unknown as Prisma.JsonObject,
-                timestamp: new Date(),
+                creationTimestamp: new Date(),
                 status: "PENDING",
                 guild: {
                     connectOrCreate: {

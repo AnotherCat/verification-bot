@@ -92,7 +92,8 @@ const approveLogic = async ({
         },
         data: {
             status: "APPROVED",
-            reviewMessageDeleted: true
+            reviewMessageDeleted: true,
+            closureTimestamp: new Date()
         }
     })
 

@@ -59,7 +59,7 @@ async function sharedLogic(interaction: ButtonInteraction<"cached">, settings: G
                 status: {
                     in: ["APPROVED", "DENIED", "BANNED", "LAPSED"]
                 }
-            }, orderBy: { timestamp: "desc" }, skip: targetIndex
+            }, orderBy: { creationTimestamp: "desc" }, skip: targetIndex
         })
     }
     catch (error) {
@@ -84,7 +84,7 @@ async function sharedLogic(interaction: ButtonInteraction<"cached">, settings: G
             + `\n**Pronouns**: ${applicationData.pronouns}`
             + `\n**Identity**: ${applicationData.identity}`
             + `\n**Reason**: ${applicationData.reason}`
-            + `\n\n**Date Submitted**: <t:${Math.round(targetApplication.timestamp.getTime() / 1000)}:F>`
+            + `\n\n**Date Submitted**: <t:${Math.round(targetApplication.creationTimestamp.getTime() / 1000)}:F>`
             + `\n*Application #${targetIndex + 1} of ${count}*`
         )
 

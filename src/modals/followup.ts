@@ -128,7 +128,7 @@ const modal: Modal<true> = {
                 },
             },
             orderBy: {
-                timestamp: "desc",
+                creationTimestamp: "desc",
             },
         });
 

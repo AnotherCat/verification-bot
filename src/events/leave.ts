@@ -93,7 +93,8 @@ async function closeApplication({ application, guild, reason, type, user, settin
         },
         data: {
             status: type === "ban" ? "BANNED" : type === "kick" ? "DENIED" : "LAPSED",
-            reviewMessageDeleted: true
+            reviewMessageDeleted: true,
+            closureTimestamp: new Date()
         }
     })
 

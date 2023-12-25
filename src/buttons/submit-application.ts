@@ -14,7 +14,7 @@ const button: Button<true> = {
 			where: {
 				userId: BigInt(interaction.member.user.id),
 			},
-			orderBy: { timestamp: "desc" },
+			orderBy: { creationTimestamp: "desc" },
 		})
 		if (application && (application.status === "PENDING" || application.status === "RAISED" || application.status === "FOLLOWUP")) {
 			throw new MessageError("You already have a pending application, please wait for that to be reviewed.")

@@ -37,7 +37,8 @@ model VerificationSubmission {
   reference              String             @id @unique
   userId                 BigInt
   data                   Json
-  timestamp              DateTime
+  creationTimestamp      DateTime
+  closureTimestamp       DateTime?
   status                 VerificationStatus
   reviewMessageId        BigInt
   reviewMessageChannelId BigInt
