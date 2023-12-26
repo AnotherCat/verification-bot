@@ -5,6 +5,7 @@ import { embedBlue, embedGreen } from "../const";
 import { MessageError } from "../errors";
 import { ApplicationData, Modal } from "../types";
 import crypto from "crypto";
+import sharedRaise from "../shared/raise";
 
 
 const modal: Modal<true> = {
@@ -121,6 +122,30 @@ const modal: Modal<true> = {
             content: undefined,
             components: []
         })
+
+        // Check if user is underage
+        if (Number(application.age) < 13) {
+            const raiseData = await sharedRaise({
+                applicationReference,
+                guild: interaction.guild,
+                reason: `User is underage (<13)`,
+                settings,
+                raiseMember: interaction.guild.members.me ?? await interaction.guild.members.fetchMe()
+                , message: reviewMessage
+            })
+
+            await reviewMessage.edit({
+                embeds: [
+                    raiseData.embed
+                ],
+                components: raiseData.originalMessageComponents
+            })
+
+
+
+        }
+
+
 
 
     },
