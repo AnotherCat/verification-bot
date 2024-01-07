@@ -47,6 +47,7 @@ model VerificationSubmission {
   guildId                BigInt
   raiseMessageId         BigInt?
   raiseThreadId          BigInt?
+  approverId             BigInt?
   guild                  Guild              @relation(fields: [guildId], references: [id])
 }
 

@@ -53,7 +53,8 @@ const approveLogic = async ({
             `\n\n**Age**: ${applicationData.age}`
             + `\n**Pronouns**: ${applicationData.pronouns}`
             + `\n**Identity**: ${applicationData.identity}`
-            + `\n**Reason**: ${applicationData.reason}`,
+            + `\n**Reason**: ${applicationData.reason}`
+            + `\n**Approved by**: <@${interaction.user.id}>`,
         color: embedGreen
     })
     const logActionRow = new ActionRowBuilder<ButtonBuilder>()
@@ -93,7 +94,8 @@ const approveLogic = async ({
         data: {
             status: "APPROVED",
             reviewMessageDeleted: true,
-            closureTimestamp: new Date()
+            closureTimestamp: new Date(),
+            approverId: BigInt(interaction.user.id)
         }
     })
 
