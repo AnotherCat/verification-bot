@@ -235,15 +235,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:^5.7.1":
-  version: 5.7.1
-  resolution: "@prisma/client@npm:5.7.1"
+"@prisma/client@npm:^5.8.1":
+  version: 5.8.1
+  resolution: "@prisma/client@npm:5.8.1"
   peerDependencies:
     prisma: "*"
   peerDependenciesMeta:
     prisma:
       optional: true
-  checksum: c2976208ef43e88eaf7ea6b4b9775625f8a9c83cb990869e07568997e5af00e57a393f8f21807fd1716fcb826d5f70502c24123f0628d71a0182765ab37b69f8
+  checksum: 3ba6e8b2d22a67599299b7bf551526d35551291ecc147a52b1d4c107374e1754fe6815c7cd0b6af875dfd903475e03a9db3f3c9eb4855e9003327c35e8ee398e
   languageName: node
   linkType: hard
 
@@ -2472,7 +2472,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "verification-bot@workspace:."
   dependencies:
-    "@prisma/client": ^5.7.1
+    "@prisma/client": ^5.8.1
     "@sentry/cli": ^2.24.1
     "@sentry/node": ^7.92.0
     "@sentry/profiling-node": ^1.3.2
