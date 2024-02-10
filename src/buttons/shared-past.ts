@@ -10,6 +10,7 @@ async function sharedLogic(interaction: ButtonInteraction<"cached">, settings: G
     embeds: EmbedBuilder[],
     components: ActionRowBuilder<ButtonBuilder>[]
 }> {
+    console.log(settings, "shared-past.ts")
     await checkReviewerRole(interaction, settings)
     const applicationReference = interaction.customId.split(":")[1]
     const targetIndex = parseInt(interaction.customId.split(":")[2])
@@ -82,7 +83,7 @@ async function sharedLogic(interaction: ButtonInteraction<"cached">, settings: G
             `**Status:** ${targetApplication.status}\n` +
             `\n__**Application**__:\n**Age**: ${applicationData.age}`
             + `\n**Pronouns**: ${applicationData.pronouns}`
-            + `\n**Identity**: ${applicationData.identity}`
+            + `${applicationData.identity ? `\n**Identity**: ${applicationData.identity}` : ""}${applicationData.sexuality ? `\n**Sexuality**: ${applicationData.sexuality}` : ""}${applicationData.gender ? `\n**Gender**: ${applicationData.gender}` : ""}`
             + `\n**Reason**: ${applicationData.reason}`
             + `\n\n**Date Submitted**: <t:${Math.round(targetApplication.creationTimestamp.getTime() / 1000)}:F>`
             + `\n*Application #${targetIndex + 1} of ${count}*`

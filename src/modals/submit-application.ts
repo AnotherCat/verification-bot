@@ -36,9 +36,11 @@ const modal: Modal<true> = {
         const application: ApplicationData = {
             pronouns: interaction.fields.getTextInputValue("pronouns"),
             age: interaction.fields.getTextInputValue("age"),
-            identity: interaction.fields.getTextInputValue("identity"),
+            sexuality: interaction.fields.getTextInputValue("sexuality"),
+            gender: interaction.fields.getTextInputValue("gender"),
             reason: interaction.fields.getTextInputValue("reason"),
         }
+        console.log(application)
 
         const applicationReference = crypto.randomUUID()
 
@@ -47,6 +49,11 @@ const modal: Modal<true> = {
         if (!reviewChannel || !reviewChannel.isTextBased()) {
             throw new Error("Could not find the review channel! This is not an expected error, please contact a server mod.");
         }
+        console.log(`Application submitted by: <@${interaction.member.user.id}> \`${interaction.member.user.username}#${interaction.member.user.discriminator}\` (\`${interaction.member.user.id}\`)` +
+            `\n\n**Age**: ${application.age}`
+            + `\n**Pronouns**: ${application.pronouns}`
+            + `${application.identity ? `\n**Identity**: ${application.identity}` : ""}${application.sexuality ? `\n**Sexuality**: ${application.sexuality}` : ""}${application.gender ? `\n**Gender**: ${application.gender}` : ""}`
+            + `\n**Reason**: ${application.reason}`,)
         const reviewMessage = await reviewChannel.send({
             embeds: [
                 new EmbedBuilder({
@@ -54,7 +61,7 @@ const modal: Modal<true> = {
                     description: `Application submitted by: <@${interaction.member.user.id}> \`${interaction.member.user.username}#${interaction.member.user.discriminator}\` (\`${interaction.member.user.id}\`)` +
                         `\n\n**Age**: ${application.age}`
                         + `\n**Pronouns**: ${application.pronouns}`
-                        + `\n**Identity**: ${application.identity}`
+                        + `${application.identity ? `\n**Identity**: ${application.identity}` : ""}${application.sexuality ? `\n**Sexuality**: ${application.sexuality}` : ""}${application.gender ? `\n**Gender**: ${application.gender}` : ""}`
                         + `\n**Reason**: ${application.reason}`,
                     color: embedBlue
                 })

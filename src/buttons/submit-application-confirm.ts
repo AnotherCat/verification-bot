@@ -40,12 +40,20 @@ const button: Button<true> = {
             .setPlaceholder("Exact age is required - eg 17")
             .setStyle(TextInputStyle.Short))
 
-        const queerIdentity = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
-            .setCustomId("identity")
-            .setLabel("Queer Identity(s)")
+        const sexuality = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
+            .setCustomId("sexuality")
+            .setLabel("Sexuality")
             .setMaxLength(500)
             .setRequired(true)
-            .setPlaceholder("Your queer identities, if any, here")
+            .setPlaceholder("Your sexual orientation")
+            .setStyle(TextInputStyle.Short))
+
+        const gender = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
+            .setCustomId("gender")
+            .setLabel("Gender")
+            .setMaxLength(500)
+            .setRequired(true)
+            .setPlaceholder("Your gender")
             .setStyle(TextInputStyle.Short))
 
         const joiningReason = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(new TextInputBuilder()
@@ -58,7 +66,8 @@ const button: Button<true> = {
 
         modal.addComponents(
             ageInput,
-            queerIdentity,
+            sexuality,
+            gender,
             joiningReason,
             pronounInput,
         )

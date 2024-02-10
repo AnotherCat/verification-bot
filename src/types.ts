@@ -35,7 +35,9 @@ interface ApplicationData {
     age: string,
     pronouns: string,
     reason: string,
-    identity: string,
+    identity?: string,
+    gender?: string,
+    sexuality?: string,
 
 }
 
@@ -76,6 +78,7 @@ async function getGuildSettings(guildId: string): Promise<GuildSettingsParsedRet
     )) {
         return { success: false };
     }
+    console.log(settings, 'types.ts')
     return {
         success: true,
         data: {

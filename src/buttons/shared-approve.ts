@@ -52,7 +52,7 @@ const approveLogic = async ({
         description: `Application submitted by: <@${member.user.id}> \`${member.user.username}#${member.user.discriminator}\` (\`${member.user.id}\`)` +
             `\n\n**Age**: ${applicationData.age}`
             + `\n**Pronouns**: ${applicationData.pronouns}`
-            + `\n**Identity**: ${applicationData.identity}`
+            + `${applicationData.identity ? `\n**Identity**: ${applicationData.identity}` : ""}${applicationData.sexuality ? `\n**Sexuality**: ${applicationData.sexuality}` : ""}${applicationData.gender ? `\n**Gender**: ${applicationData.gender}` : ""}`
             + `\n**Reason**: ${applicationData.reason}`
             + `\n**Approved by**: <@${interaction.user.id}>`,
         color: embedGreen

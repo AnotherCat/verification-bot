@@ -79,7 +79,7 @@ async function closeApplication({ application, guild, reason, type, user, settin
         description: `Application submitted by: <@${user.id}> \`${user.username}#${user.discriminator}\` (\`${user.id}\`)` +
             `\n\n**Age**: ${applicationData.age}`
             + `\n**Pronouns**: ${applicationData.pronouns}`
-            + `\n**Identity**: ${applicationData.identity}`
+            + `${applicationData.identity ? `\n**Identity**: ${applicationData.identity}` : ""}${applicationData.sexuality ? `\n**Sexuality**: ${applicationData.sexuality}` : ""}${applicationData.gender ? `\n**Gender**: ${applicationData.gender}` : ""}`
             + `\n**Reason**: ${applicationData.reason}`
             + (reason ? `\n\n**${type.charAt(0).toUpperCase() + type.slice(1)} Reason**: ${reason}` : ""),
         color: embedColor
