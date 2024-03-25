@@ -437,18 +437,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/profiling-node@npm:^1.3.2":
-  version: 1.3.2
-  resolution: "@sentry/profiling-node@npm:1.3.2"
+"@sentry/profiling-node@npm:^7.108.0":
+  version: 7.108.0
+  resolution: "@sentry/profiling-node@npm:7.108.0"
   dependencies:
     detect-libc: ^2.0.2
     node-abi: ^3.52.0
     node-gyp: latest
-  peerDependencies:
-    "@sentry/node": ^7.44.1
   bin:
-    sentry-prune-profiler-binaries: scripts/prune-profiler-binaries.mjs
-  checksum: d6c160729d2147878ba80fa6466fcede923a62f22dfab99c01c1ed9cacdb5e69c0413cade6c69e0cd6fca48a1e8579aed174bd5730c59fa205cb79b166cae668
+    sentry-prune-profiler-binaries: scripts/prune-profiler-binaries.js
+  checksum: 96009b67d83af231c08f45b31bfd6c1bd66471590f2424746b696d69cab000e3340ff8db12218cebfec4e69cb6a102113e8c2fa8a919413ee68710a24f7af5e2
   languageName: node
   linkType: hard
 
@@ -2475,7 +2473,7 @@ __metadata:
     "@prisma/client": ^5.7.1
     "@sentry/cli": ^2.24.1
     "@sentry/node": ^7.92.0
-    "@sentry/profiling-node": ^1.3.2
+    "@sentry/profiling-node": ^7.108.0
     "@typescript-eslint/eslint-plugin": ^6.18.0
     "@typescript-eslint/parser": ^6.18.0
     discord.js: ^14.14.1
